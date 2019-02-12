@@ -1,0 +1,6 @@
+description: 'Create report for the Thunder performance project.'
+options: {}
+arguments:
+    filename: 'If a filename is given, the report will be written into that file. Otherwise the report will be printed to screen.'
+messages:
+    success: 'Created report.'

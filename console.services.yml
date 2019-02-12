@@ -1,0 +1,6 @@
+services:
+  sampler.sampler_report:
+    class: Drupal\sampler\Command\ReportCommand
+    arguments: ['@sampler.reporter']
+    tags:
+      - { name: drupal.command }

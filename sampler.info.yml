@@ -1,0 +1,5 @@
+name: 'Sampler'
+type: module
+description: 'Provide drush 8, 9 and drupal console commands, to sample statistical data for the Thunder performance project.'
+package: Thunder
+core: '8.x'
