@@ -86,9 +86,12 @@ class Reporter {
       }
 
       $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
-      $group_key = $entity_type_definition->getKey('bundle');
-      $id_key = $entity_type_definition->getKey('id');
-      $results[$entity_type] = $this->countGroupedInstances($entity_type, $group_key, $id_key);
+      $results[$entity_type][$entity_type_definition->getKey('bundle')] =
+        $this->countGroupedInstances(
+          $entity_type,
+          $entity_type_definition->getKey('bundle'),
+          $entity_type_definition->getKey('id')
+        );
 
     }
 
