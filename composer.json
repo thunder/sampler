@@ -2,6 +2,7 @@
     "name": "thunder/sampler",
     "description": "Provide drush 8, 9 and drupal console commands, to sample statistical data for the Thunder performance project.",
     "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
     "require": {
         "php": ">=7.0.0"
     },
