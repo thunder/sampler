@@ -39,14 +39,22 @@ class Reporter {
     'comment'
   ];
 
+  /**
+   * Reporter constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\user\PermissionHandlerInterface $permission_handler
+   */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, PermissionHandlerInterface $permission_handler) {
     $this->entityTypeManager = $entity_type_manager;
     $this->permissionHandler = $permission_handler;
   }
 
   public function collect() {
-    $report = $this->countEntitiesPerBundle();
+    $report['bundle'] = $this->countEntitiesPerBundle();
     $report += ['user' => $this->countUsers()];
+    $report += ['paragraph' => $this->countParagraphs()];
+
     $this->report = $report;
 
     return $this;
@@ -62,7 +70,7 @@ class Reporter {
     }
   }
 
-  protected function getFormattedReport(): string {
+  protected function getFormattedReport() {
     return json_encode($this->report, JSON_PRETTY_PRINT);
   }
 
@@ -127,6 +135,10 @@ class Reporter {
     }
 
     return $results;
+  }
+
+  protected function countParagraphs() {
+
   }
 
   /**
