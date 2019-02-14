@@ -35,8 +35,8 @@ class Reporter {
     'node',
     'taxonomy_term',
     'media',
-    'paragraph',
-    'comment'
+    'comment',
+    'paragraph'
   ];
 
   /**
@@ -51,9 +51,16 @@ class Reporter {
   }
 
   public function collect() {
-    $report['bundle'] = $this->countEntitiesPerBundle();
-    $report += ['user' => $this->countUsers()];
-    $report += ['paragraph' => $this->countParagraphs()];
+    $report = ['per_bundle_count' => []];
+    foreach ($this->bundledEntityTypes as $entity_type) {
+      // Entity does not exist in this installation? ignore it.
+      if (!$this->entityTypeManager->hasDefinition($entity_type)){
+        continue;
+      }
+      $report['per_bundle_count'][$entity_type] = $this->countEntitiesPerBundle($entity_type);
+    }
+    $report += ['user_count' => $this->countUsers()];
+    $report += ['paragraph_count' => $this->countParagraphs()];
 
     $this->report = $report;
 
@@ -75,35 +82,27 @@ class Reporter {
   }
 
   /**
-   * Count Entities by Entity type and bundle.
+   * Count entity instances per bundle for given entity type.
    *
-   * The entity types are defined in $this->bundledEntityTypes.
+   * @param string $entity_type
+   *   The entity type to count per bundle.
    *
    * @return array
    *  The entity count. Keyed by entity_type and bundle.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function countEntitiesPerBundle() {
-    $results = [];
+  protected function countEntitiesPerBundle($entity_type) {
+    $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
+    $bundle_key = $entity_type_definition->getKey('bundle');
+    $id_key = $entity_type_definition->getKey('id');
 
-    foreach ($this->bundledEntityTypes as $entity_type) {
-      // Entity not not exist in this installation? ignore it.
-      if (!$this->entityTypeManager->hasDefinition($entity_type)){
-        continue;
-      }
+    return $this->countGroupedInstances(
+        $entity_type,
+        $bundle_key,
+        $id_key
+      );
 
-      $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
-      $results[$entity_type][$entity_type_definition->getKey('bundle')] =
-        $this->countGroupedInstances(
-          $entity_type,
-          $entity_type_definition->getKey('bundle'),
-          $entity_type_definition->getKey('id')
-        );
-
-    }
-
-    return $results;
   }
 
   /**
@@ -121,23 +120,29 @@ class Reporter {
   protected function countUsers() {
     $entity_type = 'user';
     $group_key = 'roles';
-    $results = ['role' => [], 'editors' => 0];
+    $results = ['per_role' => [], 'all_editors' => 0];
 
     $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
     $id_key = $entity_type_definition->getKey('id');
 
-    $results['role'] = $this->countGroupedInstances($entity_type, $group_key, $id_key);
+    $results['per_role'] = $this->countGroupedInstances($entity_type, $group_key, $id_key);
 
     $editor_roles = $this->getEditorRoles();
 
     foreach($editor_roles as $editor_role) {
-      $results['editors'] += $results['role'][$editor_role];
+      $results['all_editors'] += $results['per_role'][$editor_role];
     }
 
     return $results;
   }
 
   protected function countParagraphs() {
+    $entity_type = 'paragraph';
+    if (!$this->entityTypeManager->hasDefinition($entity_type)){
+      return;
+    }
+
+    $average_per_node =
 
   }
 
