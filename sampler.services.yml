@@ -1,4 +1,4 @@
 services:
   sampler.reporter:
     class: Drupal\sampler\Reporter
-    arguments: ['@entity_type.manager', '@user.permissions']
+    arguments: ['@entity_type.manager', '@user.permissions', '@database']
