@@ -76,26 +76,12 @@ class Reporter {
    * @return $this
    */
   public function collect() {
-    $report = ['per_bundle_count' => []];
-    foreach ($this->bundledEntityTypes as $entity_type) {
-      // Entity does not exist in this installation? ignore it.
-      if (!$this->entityTypeManager->hasDefinition($entity_type)) {
-        continue;
-      }
+    $report = [];
 
-      $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
-      $base_table = $entity_type_definition->getBaseTable();
-      $bundle_key = $entity_type_definition->getKey('bundle');
-      $id_key = $entity_type_definition->getKey('id');
-
-      $report['per_bundle_count'][$entity_type] = $this->countGroupedInstances(
-        $base_table,
-        $bundle_key,
-        $id_key
-      );
-    }
-    $report += ['user_count' => $this->countUsers()];
-    $report += ['paragraph_histogram' => $this->paragraphHistogram()];
+    $report['count']['per_bundle'] = $this->countBundleGroups();
+    $report['count']['user'] = $this->countUsers();
+    $report['histogram']['paragraph'] = $this->paragraphHistogram();
+    $report['histogram']['revisions'] = $this->revisionHistogram();
 
     $this->report = $report;
 
@@ -140,22 +126,36 @@ class Reporter {
    *   count of editors grouped by entity type..
    */
   protected function countUsers() {
-    $base_table = 'user__roles';
-    $group_key = 'roles_target_id';
-    $id_key = 'entity_id';
+    $baseTable = 'user__roles';
+    $groupKey = 'roles_target_id';
+    $idKey = 'entity_id';
 
-    $results['per_role'] = $this->countGroupedInstances($base_table, $group_key, $id_key);
+    $results['per_role'] = $this->countGroupedInstances($baseTable, $groupKey, $idKey);
 
     $provider = ['node', 'taxonomy'];
     foreach ($provider as $p) {
-      $editor_roles = $this->getEditorRoles($p);
+      $editorRoles = $this->getEditorRoles($p);
 
-      foreach ($editor_roles as $editor_role) {
-        $results['with_edit_permission'][$p] += $results['per_role'][$editor_role];
+      foreach ($editorRoles as $editorRole) {
+        $results['with_edit_permission'][$p] += $results['per_role'][$editorRole];
       }
     }
 
     return $results;
+  }
+
+  protected function revisionHistogram() {
+    $histogram = [];
+
+    foreach ($this->bundledEntityTypes as $entityType) {
+      if (!$this->entityTypeManager->hasDefinition($entityType)) {
+        continue;
+      }
+      $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+      if (!$entityTypeDefinition->isRevisionable()) {
+        continue;
+      }
+    }
   }
 
   /**
@@ -164,8 +164,8 @@ class Reporter {
   protected function paragraphHistogram() {
     $histogram = [];
 
-    $entity_type = 'paragraph';
-    if (!$this->entityTypeManager->hasDefinition($entity_type)) {
+    $entityType = 'paragraph';
+    if (!$this->entityTypeManager->hasDefinition($entityType)) {
       return;
     }
 
@@ -182,8 +182,8 @@ class Reporter {
       $histogram[$record->parent_type][$record->count]++;
     }
 
-    foreach ($histogram as $parent_type => $counts) {
-      ksort($histogram[$parent_type]);
+    foreach ($histogram as $parentType => $counts) {
+      ksort($histogram[$parentType]);
     }
 
     return $histogram;
@@ -200,37 +200,66 @@ class Reporter {
    */
   protected function getEditorRoles($provider) {
     // Filter all permissions, that allow changing of node content.
-    $permissions = array_filter($this->permissionHandler->getPermissions(), function ($permission, $permission_name) use ($provider) {
-      return ($permission['provider'] === $provider && preg_match("/^(create|delete|edit|revert)/", $permission_name));
+    $permissions = array_filter($this->permissionHandler->getPermissions(), function ($permission, $permissionName) use ($provider) {
+      return ($permission['provider'] === $provider && preg_match("/^(create|delete|edit|revert)/", $permissionName));
     }, ARRAY_FILTER_USE_BOTH);
 
     // Find all roles, that have these permissions.
     $roles = [];
-    foreach ($permissions as $permission_name => $permission) {
-      $roles += user_roles(FALSE, $permission_name);
+    foreach ($permissions as $permissionName => $permission) {
+      $roles += user_roles(FALSE, $permissionName);
     }
 
     return array_keys($roles);
   }
 
-  protected function countGroupedInstances($base_table, $group_key, $id_key) {
-    $group_alias = 'group';
-    $count_alias = 'count';
+  protected function countGroupedInstances($baseTable, $groupKey, $idKey) {
+    $groupAlias = 'group';
+    $countAlias = 'count';
 
     $counts = [];
 
-    $query = $this->connection->select($base_table, 'b');
-    $query->addField('b', $group_key, $group_alias);
-    $query->addExpression("count($id_key)", $count_alias);
-    $query->groupBy($group_key);
+    $query = $this->connection->select($baseTable, 'b');
+    $query->addField('b', $groupKey, $groupAlias);
+    $query->addExpression("count($idKey)", $countAlias);
+    $query->groupBy($groupKey);
     $result = $query->execute();
 
 
     foreach ($result as $item) {
-      $counts[$item->$group_alias] = $item->$count_alias;
+      $counts[$item->$groupAlias] = $item->$countAlias;
     }
 
     return $counts;
+  }
+
+  /**
+   * Count items per bundle.
+   *
+   * @return mixed
+   *   The bundle counts.
+   */
+  protected function countBundleGroups() {
+    $bundles = [];
+    foreach ($this->bundledEntityTypes as $entityType) {
+      // Entity does not exist in this installation? ignore it.
+      if (!$this->entityTypeManager->hasDefinition($entityType)) {
+        continue;
+      }
+
+      $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+      $baseTable = $entityTypeDefinition->getBaseTable();
+      $bundleKey = $entityTypeDefinition->getKey('bundle');
+      $idKey = $entityTypeDefinition->getKey('id');
+
+      $bundles[$entityType] = $this->countGroupedInstances(
+        $baseTable,
+        $bundleKey,
+        $idKey
+      );
+
+    }
+    return $bundles;
   }
 
 }
