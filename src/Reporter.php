@@ -80,8 +80,7 @@ class Reporter {
 
     $report['count']['per_bundle'] = $this->countBundleGroups();
     $report['count']['user'] = $this->countUsers();
-    $report['histogram']['paragraph'] = $this->paragraphHistogram();
-    $report['histogram']['revisions'] = $this->revisionHistogram();
+    $report['histogram'] = array_merge_recursive($this->revisionHistogram(), $this->paragraphHistogram());
 
     $this->report = $report;
 
@@ -151,11 +150,31 @@ class Reporter {
       if (!$this->entityTypeManager->hasDefinition($entityType)) {
         continue;
       }
+
       $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
       if (!$entityTypeDefinition->isRevisionable()) {
         continue;
       }
+
+      $revisionTable = $entityTypeDefinition->getRevisionTable();
+      $idKey = $entityTypeDefinition->getKey('id');
+      $revisionId = $entityTypeDefinition->getKey('revision');
+
+      $query = $this->connection->select($revisionTable, 'r');
+      $query->addExpression('count(' . $revisionId . ')', 'count');
+      $query->groupBy($idKey);
+
+      $results = $query->execute();
+      foreach ($results as $record) {
+        $histogram[$entityType]['revision'][$record->count]++;
+      }
+
+      foreach ($histogram as $entityType => $counts) {
+        ksort($histogram[$entityType]['revision']);
+      }
     }
+
+    return $histogram;
   }
 
   /**
@@ -169,9 +188,12 @@ class Reporter {
       return;
     }
 
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+    $dataTable = $entityTypeDefinition->getDataTable();
+
     $query = $this->connection
-      ->select('paragraphs_item_field_data', 'p')
-      ->fields('p', ['parent_type']);
+      ->select($dataTable, 'r')
+      ->fields('r', ['parent_type']);
 
     $query->addExpression('count(id)', 'count');
     $query->groupBy('parent_type');
@@ -179,11 +201,11 @@ class Reporter {
 
     $results = $query->execute();
     foreach ($results as $record) {
-      $histogram[$record->parent_type][$record->count]++;
+      $histogram[$record->parent_type]['paragraph'][$record->count]++;
     }
 
     foreach ($histogram as $parentType => $counts) {
-      ksort($histogram[$parentType]);
+      ksort($histogram[$parentType]['paragraph']);
     }
 
     return $histogram;
