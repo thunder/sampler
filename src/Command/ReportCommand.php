@@ -7,7 +7,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Drupal\Console\Core\Command\ContainerAwareCommand;
+// phpcs:disable
 use Drupal\Console\Annotations\DrupalCommand;
+// phpcs:enable
 
 /**
  * Class ReportCommand.
@@ -33,6 +35,7 @@ class ReportCommand extends ContainerAwareCommand {
     $this->reporter = $reporter;
     parent::__construct();
   }
+
   /**
    * {@inheritdoc}
    */
@@ -43,9 +46,9 @@ class ReportCommand extends ContainerAwareCommand {
       ->setDescription($this->trans('commands.sampler.report.description'));
   }
 
- /**
-  * {@inheritdoc}
-  */
+  /**
+   * {@inheritdoc}
+   */
   protected function initialize(InputInterface $input, OutputInterface $output) {
     parent::initialize($input, $output);
   }
@@ -59,4 +62,5 @@ class ReportCommand extends ContainerAwareCommand {
       ->collect()
       ->output($filename);
   }
+
 }

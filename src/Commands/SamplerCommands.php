@@ -25,6 +25,9 @@ class SamplerCommands extends DrushCommands {
    */
   protected $reporter;
 
+  /**
+   *
+   */
   public function __construct(Reporter $reporter) {
     $this->reporter = $reporter;
   }
@@ -33,8 +36,8 @@ class SamplerCommands extends DrushCommands {
    * Create report for the Thunder performance project.
    *
    * @param string $filename
-   *  If a filename is given, the report will be written into that file.
-   *  Otherwise the report will be printed to screen.
+   *   If a filename is given, the report will be written into that file.
+   *   Otherwise the report will be printed to screen.
    *
    * @command sampler:report
    */
