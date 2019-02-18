@@ -67,7 +67,7 @@ class Reporter {
     'media',
     'comment',
     'paragraph',
-    'user'
+    'user',
   ];
 
   /**
@@ -149,9 +149,9 @@ class Reporter {
       $settings = $this->getGroupingSettings($entityTypeId);
 
       $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
-      $entityData['base_fields'] = count($baseFields);
+      $entityData = ['base_fields' => count($baseFields)];
 
-      foreach ($settings['groups'] as $group => $definition) {
+      foreach (array_keys($settings['groups']) as $group) {
         $fields = array_diff_key(
           array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
           array_keys($baseFields)
