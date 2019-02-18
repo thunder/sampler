@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Drush commands for sampler module.
  */
 
 /**
