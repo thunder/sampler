@@ -78,9 +78,17 @@ class Reporter {
   public function collect() {
     $report = [];
 
-    $report['count']['per_bundle'] = $this->countBundleGroups();
-    $report['count']['user'] = $this->countUsers();
-    $report['histogram'] = array_merge_recursive($this->revisionHistogram(), $this->paragraphHistogram());
+    $report['structure'] = $this->structureData();
+
+    $report['count'] = array_merge_recursive(
+      $this->countBundleGroups(),
+      $this->countUsers()
+    );
+
+    $report['histogram'] = array_merge_recursive(
+      $this->revisionHistogram(),
+      $this->paragraphHistogram()
+    );
 
     $this->report = $report;
 
@@ -129,14 +137,14 @@ class Reporter {
     $groupKey = 'roles_target_id';
     $idKey = 'entity_id';
 
-    $results['per_role'] = $this->countGroupedInstances($baseTable, $groupKey, $idKey);
+    $results['user']['per_role'] = $this->countGroupedInstances($baseTable, $groupKey, $idKey);
 
     $provider = ['node', 'taxonomy'];
     foreach ($provider as $p) {
       $editorRoles = $this->getEditorRoles($p);
 
       foreach ($editorRoles as $editorRole) {
-        $results['with_edit_permission'][$p] += $results['per_role'][$editorRole];
+        $results['user']['with_edit_permission'][$p] += $results['user']['per_role'][$editorRole];
       }
     }
 
@@ -274,7 +282,7 @@ class Reporter {
       $bundleKey = $entityTypeDefinition->getKey('bundle');
       $idKey = $entityTypeDefinition->getKey('id');
 
-      $bundles[$entityType] = $this->countGroupedInstances(
+      $bundles[$entityType]['per_bundle'] = $this->countGroupedInstances(
         $baseTable,
         $bundleKey,
         $idKey
@@ -282,6 +290,20 @@ class Reporter {
 
     }
     return $bundles;
+  }
+
+  /**
+   * Retrieve structural information.
+   */
+  protected function structureData() {
+    foreach ($this->bundledEntityTypes as $entityType) {
+      if (!$this->entityTypeManager->hasDefinition($entityType)) {
+        continue;
+      }
+
+      $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+
+    }
   }
 
 }
