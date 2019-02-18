@@ -67,7 +67,7 @@ class Reporter {
     'media',
     'comment',
     'paragraph',
-    'user'
+    'user',
   ];
 
   /**
@@ -149,9 +149,10 @@ class Reporter {
       $settings = $this->getGroupingSettings($entityTypeId);
 
       $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
+      $entityData = [];
       $entityData['base_fields'] = count($baseFields);
 
-      foreach ($settings['groups'] as $group => $definition) {
+      foreach (array_keys($settings['groups']) as $group) {
         $fields = array_diff_key(
           array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
           array_keys($baseFields)
@@ -195,6 +196,7 @@ class Reporter {
         continue;
       }
 
+      $histogram[$entityTypeId] = ['revision' => []];
       $revisionTable = $entityTypeDefinition->getRevisionTable();
       $idKey = $entityTypeDefinition->getKey('id');
       $revisionId = $entityTypeDefinition->getKey('revision');
@@ -205,6 +207,10 @@ class Reporter {
 
       $results = $query->execute();
       foreach ($results as $record) {
+        if (!isset($histogram[$entityTypeId]['revision'][$record->count])) {
+          $histogram[$entityTypeId]['revision'][$record->count] = 1;
+          continue;
+        }
         $histogram[$entityTypeId]['revision'][$record->count]++;
       }
 
@@ -243,6 +249,13 @@ class Reporter {
 
     $results = $query->execute();
     foreach ($results as $record) {
+      if (!isset($histogram[$record->parent_type])) {
+        $histogram[$record->parent_type] = ['paragraph' => []];
+      }
+      if (!isset($histogram[$record->parent_type]['paragraph'][$record->count])) {
+        $histogram[$record->parent_type]['paragraph'][$record->count] = 1;
+        continue;
+      }
       $histogram[$record->parent_type]['paragraph'][$record->count]++;
     }
 
@@ -318,6 +331,7 @@ class Reporter {
     $provider = ['node', 'taxonomy'];
     $editingUsers = [];
     foreach ($provider as $p) {
+      $editingUsers[$p] = ['instances' => 0];
       $editorRoles = $this->getEditorRoles($p);
       foreach ($editorRoles as $editorRole) {
         $editingUsers[$p]['instances'] += $roleCounts[$editorRole]['instances'];
