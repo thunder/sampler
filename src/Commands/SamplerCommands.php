@@ -26,7 +26,10 @@ class SamplerCommands extends DrushCommands {
   protected $reporter;
 
   /**
+   * SamplerCommands constructor.
    *
+   * @param \Drupal\sampler\Reporter $reporter
+   *   The reporter service.
    */
   public function __construct(Reporter $reporter) {
     $this->reporter = $reporter;

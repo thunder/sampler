@@ -5,7 +5,7 @@
  */
 
 /**
- *
+ * Implements hook_drush_command().
  */
 function sampler_drush_command() {
   $items = [];
@@ -20,7 +20,7 @@ function sampler_drush_command() {
 }
 
 /**
- *
+ * Run the sampler report.
  */
 function drush_sampler_report($filename = NULL) {
   $reporter = \Drupal::service('sampler.reporter');

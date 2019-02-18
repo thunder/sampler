@@ -49,13 +49,6 @@ class ReportCommand extends ContainerAwareCommand {
   /**
    * {@inheritdoc}
    */
-  protected function initialize(InputInterface $input, OutputInterface $output) {
-    parent::initialize($input, $output);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $filename = $input->getArgument('filename');
     $this->reporter
