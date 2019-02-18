@@ -177,7 +177,7 @@ class Reporter {
   }
 
   /**
-   * Create a gistogramm of entities and their revisions.
+   * Create a histogram of entities and their revisions.
    *
    * @return array
    *   The histogram.
@@ -217,7 +217,10 @@ class Reporter {
   }
 
   /**
-   * Count paragraph usage.
+   * Create a histogram of entities and their paragraphs.
+   *
+   * @return array
+   *   The histogram.
    */
   protected function paragraphHistogram(): array {
     $histogram = [];
