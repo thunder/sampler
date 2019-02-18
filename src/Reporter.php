@@ -6,6 +6,11 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
 
+/**
+ * The Reporter class.
+ *
+ * @package Drupal\sampler
+ */
 class Reporter {
 
   /**
@@ -46,7 +51,7 @@ class Reporter {
     'taxonomy_term',
     'media',
     'comment',
-    'paragraph'
+    'paragraph',
   ];
 
   /**
@@ -69,20 +74,13 @@ class Reporter {
    * Collect the data.
    *
    * @return $this
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect() {
-    $report = ['per_bundle_count' => []];
-    foreach ($this->bundledEntityTypes as $entity_type) {
-      // Entity does not exist in this installation? ignore it.
-      if (!$this->entityTypeManager->hasDefinition($entity_type)) {
-        continue;
-      }
-      $report['per_bundle_count'][$entity_type] = $this->countEntitiesPerBundle($entity_type);
-    }
-    $report += ['user_count' => $this->countUsers()];
-    $report += ['paragraph_histogram' => $this->paragraphHistogram()];
+    $report = [];
+
+    $report['count']['per_bundle'] = $this->countBundleGroups();
+    $report['count']['user'] = $this->countUsers();
+    $report['histogram'] = array_merge_recursive($this->revisionHistogram(), $this->paragraphHistogram());
 
     $this->report = $report;
 
@@ -116,56 +114,67 @@ class Reporter {
   }
 
   /**
-   * Count entity instances per bundle for given entity type.
-   *
-   * @param string $entity_type
-   *   The entity type to count per bundle.
-   *
-   * @return array
-   *   The entity count. Keyed by entity_type and bundle.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function countEntitiesPerBundle($entity_type) {
-    $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
-    $bundle_key = $entity_type_definition->getKey('bundle');
-    $id_key = $entity_type_definition->getKey('id');
-
-    return $this->countGroupedInstances(
-        $entity_type,
-        $bundle_key,
-        $id_key
-      );
-
-  }
-
-  /**
    * Count users per role, and count editors.
    *
    * For this we call "editors" all users, that are allowed to create, modify
    * or delete content. This might not only be users with the role "editor"
    *
    * @return array
-   *   Return an array, that is keyed by role and has the grouped count as value.
-   *   An additional key "editors" is added, that provides the count of editors.
+   *   Return an array that is keyed by role and has the grouped count as value.
+   *   An additional key "with_edit_permission" is added that provides the
+   *   count of editors grouped by entity type..
    */
   protected function countUsers() {
-    $entity_type = 'user';
-    $group_key = 'roles';
-    $results = ['per_role' => [], 'with_edit_permission' => 0];
+    $baseTable = 'user__roles';
+    $groupKey = 'roles_target_id';
+    $idKey = 'entity_id';
 
-    $entity_type_definition = $this->entityTypeManager->getDefinition($entity_type);
-    $id_key = $entity_type_definition->getKey('id');
+    $results['per_role'] = $this->countGroupedInstances($baseTable, $groupKey, $idKey);
 
-    $results['per_role'] = $this->countGroupedInstances($entity_type, $group_key, $id_key);
+    $provider = ['node', 'taxonomy'];
+    foreach ($provider as $p) {
+      $editorRoles = $this->getEditorRoles($p);
 
-    $editor_roles = $this->getEditorRoles('node');
-
-    foreach ($editor_roles as $editor_role) {
-      $results['with_edit_permission'] += $results['per_role'][$editor_role];
+      foreach ($editorRoles as $editorRole) {
+        $results['with_edit_permission'][$p] += $results['per_role'][$editorRole];
+      }
     }
 
     return $results;
+  }
+
+  protected function revisionHistogram() {
+    $histogram = [];
+
+    foreach ($this->bundledEntityTypes as $entityType) {
+      if (!$this->entityTypeManager->hasDefinition($entityType)) {
+        continue;
+      }
+
+      $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+      if (!$entityTypeDefinition->isRevisionable()) {
+        continue;
+      }
+
+      $revisionTable = $entityTypeDefinition->getRevisionTable();
+      $idKey = $entityTypeDefinition->getKey('id');
+      $revisionId = $entityTypeDefinition->getKey('revision');
+
+      $query = $this->connection->select($revisionTable, 'r');
+      $query->addExpression('count(' . $revisionId . ')', 'count');
+      $query->groupBy($idKey);
+
+      $results = $query->execute();
+      foreach ($results as $record) {
+        $histogram[$entityType]['revision'][$record->count]++;
+      }
+
+      foreach ($histogram as $entityType => $counts) {
+        ksort($histogram[$entityType]['revision']);
+      }
+    }
+
+    return $histogram;
   }
 
   /**
@@ -174,13 +183,17 @@ class Reporter {
   protected function paragraphHistogram() {
     $histogram = [];
 
-    $entity_type = 'paragraph';
-    if (!$this->entityTypeManager->hasDefinition($entity_type)) {
+    $entityType = 'paragraph';
+    if (!$this->entityTypeManager->hasDefinition($entityType)) {
       return;
     }
 
-    $query = $this->connection->select('paragraphs_item_field_data', 'p')
-      ->fields('p', ['parent_type', 'parent_id']);
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+    $dataTable = $entityTypeDefinition->getDataTable();
+
+    $query = $this->connection
+      ->select($dataTable, 'r')
+      ->fields('r', ['parent_type']);
 
     $query->addExpression('count(id)', 'count');
     $query->groupBy('parent_type');
@@ -188,11 +201,11 @@ class Reporter {
 
     $results = $query->execute();
     foreach ($results as $record) {
-      $histogram[$record->parent_type][$record->count]++;
+      $histogram[$record->parent_type]['paragraph'][$record->count]++;
     }
 
-    foreach ($histogram as $parent_type => $counts) {
-      ksort($histogram[$parent_type]);
+    foreach ($histogram as $parentType => $counts) {
+      ksort($histogram[$parentType]['paragraph']);
     }
 
     return $histogram;
@@ -201,47 +214,74 @@ class Reporter {
   /**
    * Get roles that can create, modify or delete things.
    *
-   * @param $provider
-   *  The permission provider
+   * @param string $provider
+   *   The permission provider.
    *
    * @return array
-   *  The roles.
+   *   The roles.
    */
   protected function getEditorRoles($provider) {
     // Filter all permissions, that allow changing of node content.
-    $permissions = array_filter($this->permissionHandler->getPermissions(), function ($permission, $permission_name) use ($provider) {
-      return ($permission['provider'] === $provider && preg_match("/^(create|delete|edit|revert)/", $permission_name));
+    $permissions = array_filter($this->permissionHandler->getPermissions(), function ($permission, $permissionName) use ($provider) {
+      return ($permission['provider'] === $provider && preg_match("/^(create|delete|edit|revert)/", $permissionName));
     }, ARRAY_FILTER_USE_BOTH);
 
     // Find all roles, that have these permissions.
     $roles = [];
-    foreach ($permissions as $permission_name => $permission) {
-      $roles += user_roles(FALSE, $permission_name);
+    foreach ($permissions as $permissionName => $permission) {
+      $roles += user_roles(FALSE, $permissionName);
     }
 
     return array_keys($roles);
   }
 
-  protected function countGroupedInstances($entity_type, $group_key, $id_key) {
-    $entity_type_storage = $this->entityTypeManager->getStorage($entity_type);
-    $entity_aggregate_query = $entity_type_storage->getAggregateQuery();
+  protected function countGroupedInstances($baseTable, $groupKey, $idKey) {
+    $groupAlias = 'group';
+    $countAlias = 'count';
 
-    $count_alias = 'count';
     $counts = [];
 
-    $result = $entity_aggregate_query
-      ->groupBy($group_key)
-      ->aggregate($id_key, 'COUNT', NULL, $count_alias)
-      ->execute();
+    $query = $this->connection->select($baseTable, 'b');
+    $query->addField('b', $groupKey, $groupAlias);
+    $query->addExpression("count($idKey)", $countAlias);
+    $query->groupBy($groupKey);
+    $result = $query->execute();
+
 
     foreach ($result as $item) {
-      $first_key = key($item);
-      if (!empty($item[$first_key])) {
-        $counts[$item[$first_key]] = $item[$count_alias];
-      }
+      $counts[$item->$groupAlias] = $item->$countAlias;
     }
 
     return $counts;
+  }
+
+  /**
+   * Count items per bundle.
+   *
+   * @return mixed
+   *   The bundle counts.
+   */
+  protected function countBundleGroups() {
+    $bundles = [];
+    foreach ($this->bundledEntityTypes as $entityType) {
+      // Entity does not exist in this installation? ignore it.
+      if (!$this->entityTypeManager->hasDefinition($entityType)) {
+        continue;
+      }
+
+      $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+      $baseTable = $entityTypeDefinition->getBaseTable();
+      $bundleKey = $entityTypeDefinition->getKey('bundle');
+      $idKey = $entityTypeDefinition->getKey('id');
+
+      $bundles[$entityType] = $this->countGroupedInstances(
+        $baseTable,
+        $bundleKey,
+        $idKey
+      );
+
+    }
+    return $bundles;
   }
 
 }
