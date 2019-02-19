@@ -244,6 +244,7 @@ class Reporter {
       ->select($dataTable, 'r')
       ->fields('r', ['parent_type']);
 
+    $query->isNotNull('parent_type');
     $query->addExpression('count(id)', 'count');
     $query->groupBy('parent_type');
     $query->groupBy('parent_id');
