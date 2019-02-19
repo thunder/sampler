@@ -67,6 +67,7 @@ class Reporter {
     'media',
     'comment',
     'paragraph',
+    'block_content',
     'user',
   ];
 
