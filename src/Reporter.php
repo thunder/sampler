@@ -59,9 +59,16 @@ class Reporter {
   /**
    * Entity types whose usage will get counted per bundle.
    *
-   * @var array
+   * @var string[]
    */
   protected $bundledEntityTypes = [];
+
+  /**
+   * Mapping of group names to integer values.
+   *
+   * @var string[]
+   */
+  protected $groupMapping = [];
 
   /**
    * Reporter constructor.
@@ -89,6 +96,7 @@ class Reporter {
         $this->bundledEntityTypes[] = $definition->id();
       }
     }
+
     $this->bundledEntityTypes[] = 'user';
   }
 
@@ -108,7 +116,6 @@ class Reporter {
     );
 
     $this->report = $report;
-
     return $this;
   }
 
@@ -120,6 +127,7 @@ class Reporter {
    */
   public function output($filename = NULL) {
     $report = $this->getFormattedReport();
+
     if ($filename) {
       file_put_contents($filename, $report);
     }
@@ -143,6 +151,7 @@ class Reporter {
    */
   protected function entityData(): array {
     $structure = [];
+
     foreach ($this->bundledEntityTypes as $entityTypeId) {
       $settings = $this->getGroupingSettings($entityTypeId);
 
@@ -150,19 +159,28 @@ class Reporter {
       $entityData = [];
       $entityData['base_fields'] = count($baseFields);
 
-      foreach (array_keys($settings['groups']) as $group) {
+      foreach (array_keys($settings['groups']) as $mapping => $group) {
+        $this->setGroupMapping($entityTypeId, $group, $mapping);
+
         $query = $this->connection->select($settings['baseTable'], 'b');
         $query->condition($settings['bundleField'], $group);
-        $entityData[$settings['groupKey']][$group]['instances'] = $query->countQuery()->execute()->fetchField();
+        $entityData[$settings['groupKey']][$mapping]['instances'] = $query->countQuery()->execute()->fetchField();
 
         if ($entityTypeId !== 'user') {
           $fields = array_diff_key(
             array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
             array_keys($baseFields)
           );
-          $entityData[$settings['groupKey']][$group]['fields'] = count($fields);
+          $entityData[$settings['groupKey']][$mapping]['fields'] = count($fields);
         }
       }
+
+      // Sort groups by instance count. Since we do not provide group names
+      // we can use this order to find averages between different installations
+      // even if they call their groups differently.
+      usort($entityData[$settings['groupKey']], function ($a, $b) {
+        return $a['instances'] < $b['instances'];
+      });
 
       if ($entityTypeId === 'user') {
         $roleCounts = $entityData[$settings['groupKey']];
@@ -303,6 +321,7 @@ class Reporter {
   protected function getGroupingSettings($entityTypeId): array {
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
     $settings = [];
+
     // For user we count per role, everything else is counted per bundle.
     if ($entityTypeId === 'user') {
       $settings['baseTable'] = 'user__roles';
@@ -316,6 +335,7 @@ class Reporter {
       $settings['groups'] = $this->bundleInfo->getBundleInfo($entityTypeId);
       $settings['groupKey'] = 'bundles';
     }
+
     return $settings;
   }
 
@@ -331,14 +351,61 @@ class Reporter {
   protected function countEditingUsers(array $roleCounts): array {
     $provider = ['node', 'taxonomy'];
     $editingUsers = [];
+
     foreach ($provider as $p) {
       $editingUsers[$p] = ['instances' => 0];
       $editorRoles = $this->getEditorRoles($p);
+
       foreach ($editorRoles as $editorRole) {
         $editingUsers[$p]['instances'] += $roleCounts[$editorRole]['instances'];
       }
     }
+
     return $editingUsers;
+  }
+
+  /**
+   * Map group names to an integer value.
+   *
+   * The mapped integer will be used in output instead of the group name.
+   *
+   * @param string $entityTypeId
+   *   The grouped entity.
+   * @param string $group
+   *   The group to map.
+   * @param int $mapping
+   *   The id to use as mapping, must be an integer and unique.
+   *
+   * @throws \InvalidArgumentException
+   */
+  protected function setGroupMapping(string $entityTypeId, string $group, int $mapping) {
+    if (!isset($this->groupMapping[$entityTypeId])) {
+      $this->groupMapping[$entityTypeId] = [];
+    }
+    if (in_array($mapping, $this->groupMapping[$entityTypeId])) {
+      throw new \InvalidArgumentException('Mapping already exists');
+    }
+
+    $this->groupMapping[$group] = $mapping;
+  }
+
+  /**
+   * Get mapped value of a group.
+   *
+   * @param string $entityTypeId
+   *   The grouped entity.
+   * @param string $group
+   *   The group to map.
+   *
+   * @return int
+   *   The mapped value.
+   */
+  protected function getGroupMapping($entityTypeId, $group): int {
+    if (!isset($this->groupMapping[$entityTypeId][$group])) {
+      throw new \InvalidArgumentException('Mapping does not exists');
+    }
+
+    return $this->groupMapping[$group];
   }
 
 }
