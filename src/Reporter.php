@@ -85,7 +85,7 @@ class Reporter {
     $this->connection = $connection;
 
     foreach ($this->entityTypeManager->getDefinitions() as $definition) {
-      if ($definition->getBundleEntityType()) {
+      if ($definition->getBundleEntityType() && $definition->getBaseTable()) {
         $this->bundledEntityTypes[] = $definition->id();
       }
     }
@@ -151,11 +151,9 @@ class Reporter {
       $entityData['base_fields'] = count($baseFields);
 
       foreach (array_keys($settings['groups']) as $group) {
-        if ($settings['baseTable']) {
-          $query = $this->connection->select($settings['baseTable'], 'b');
-          $query->condition($settings['bundleField'], $group);
-          $entityData[$settings['groupKey']][$group]['instances'] = $query->countQuery()->execute()->fetchField();
-        }
+        $query = $this->connection->select($settings['baseTable'], 'b');
+        $query->condition($settings['bundleField'], $group);
+        $entityData[$settings['groupKey']][$group]['instances'] = $query->countQuery()->execute()->fetchField();
 
         if ($entityTypeId !== 'user') {
           $fields = array_diff_key(
