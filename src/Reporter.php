@@ -61,15 +61,7 @@ class Reporter {
    *
    * @var array
    */
-  protected $bundledEntityTypes = [
-    'node',
-    'taxonomy_term',
-    'media',
-    'comment',
-    'paragraph',
-    'block_content',
-    'user',
-  ];
+  protected $bundledEntityTypes = [];
 
   /**
    * Reporter constructor.
@@ -91,12 +83,21 @@ class Reporter {
     $this->entityFieldmanager = $entity_field_manager;
     $this->permissionHandler = $permission_handler;
     $this->connection = $connection;
+
+    foreach ($this->entityTypeManager->getDefinitions() as $definition) {
+      if ($definition->getBundleEntityType()) {
+        $this->bundledEntityTypes[] = $definition->id();
+      }
+    }
+    $this->bundledEntityTypes[] = 'user';
   }
 
   /**
    * Collect the data.
    *
    * @return $this
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect(): Reporter {
     $report = $this->entityData();
@@ -143,10 +144,6 @@ class Reporter {
   protected function entityData(): array {
     $structure = [];
     foreach ($this->bundledEntityTypes as $entityTypeId) {
-      if (!$this->entityTypeManager->hasDefinition($entityTypeId)) {
-        continue;
-      }
-
       $settings = $this->getGroupingSettings($entityTypeId);
 
       $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
@@ -154,15 +151,17 @@ class Reporter {
       $entityData['base_fields'] = count($baseFields);
 
       foreach (array_keys($settings['groups']) as $group) {
-        $fields = array_diff_key(
-          array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
-          array_keys($baseFields)
-        );
-        $query = $this->connection->select($settings['baseTable'], 'b');
-        $query->condition($settings['bundleField'], $group);
-        $entityData[$settings['groupKey']][$group]['instances'] = $query->countQuery()->execute()->fetchField();
+        if ($settings['baseTable']) {
+          $query = $this->connection->select($settings['baseTable'], 'b');
+          $query->condition($settings['bundleField'], $group);
+          $entityData[$settings['groupKey']][$group]['instances'] = $query->countQuery()->execute()->fetchField();
+        }
 
         if ($entityTypeId !== 'user') {
+          $fields = array_diff_key(
+            array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
+            array_keys($baseFields)
+          );
           $entityData[$settings['groupKey']][$group]['fields'] = count($fields);
         }
       }
@@ -183,15 +182,13 @@ class Reporter {
    *
    * @return array
    *   The histogram.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function revisionHistogram(): array {
     $histogram = [];
 
     foreach ($this->bundledEntityTypes as $entityTypeId) {
-      if (!$this->entityTypeManager->hasDefinition($entityTypeId)) {
-        continue;
-      }
-
       $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
       if (!$entityTypeDefinition->isRevisionable()) {
         continue;
@@ -228,6 +225,8 @@ class Reporter {
    *
    * @return array
    *   The histogram.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function paragraphHistogram(): array {
     $histogram = [];
@@ -300,6 +299,8 @@ class Reporter {
    *
    * @return array
    *   The settings.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function getGroupingSettings($entityTypeId): array {
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
