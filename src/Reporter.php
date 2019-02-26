@@ -159,8 +159,8 @@ class Reporter {
       $entityData = [];
       $entityData['base_fields'] = count($baseFields);
 
-      foreach (array_keys($settings['groups']) as $mapping => $group) {
-        $this->setGroupMapping($entityTypeId, $group, $mapping);
+      foreach (array_keys($settings['groups']) as $group) {
+        $mapping = $this->getGroupMapping($entityTypeId, $group);
 
         $query = $this->connection->select($settings['baseTable'], 'b');
         $query->condition($settings['bundleField'], $group);
@@ -174,13 +174,6 @@ class Reporter {
           $entityData[$settings['groupKey']][$mapping]['fields'] = count($fields);
         }
       }
-
-      // Sort groups by instance count. Since we do not provide group names
-      // we can use this order to find averages between different installations
-      // even if they call their groups differently.
-      usort($entityData[$settings['groupKey']], function ($a, $b) {
-        return $a['instances'] < $b['instances'];
-      });
 
       if ($entityTypeId === 'user') {
         $roleCounts = $entityData[$settings['groupKey']];
@@ -357,7 +350,7 @@ class Reporter {
       $editorRoles = $this->getEditorRoles($p);
 
       foreach ($editorRoles as $editorRole) {
-        $editingUsers[$p]['instances'] += $roleCounts[$editorRole]['instances'];
+        $editingUsers[$p]['instances'] += $roleCounts[$this->getGroupMapping('user', $editorRole)]['instances'];
       }
     }
 
@@ -397,15 +390,20 @@ class Reporter {
    * @param string $group
    *   The group to map.
    *
-   * @return int
+   * @return string
    *   The mapped value.
    */
-  protected function getGroupMapping($entityTypeId, $group): int {
-    if (!isset($this->groupMapping[$entityTypeId][$group])) {
-      throw new \InvalidArgumentException('Mapping does not exists');
+  protected function getGroupMapping($entityTypeId, $group): string {
+    if (!isset($this->groupMapping[$entityTypeId])) {
+      $this->groupMapping[$entityTypeId] = [$group => 'group-0'];
+      return $this->groupMapping[$entityTypeId][$group];
     }
 
-    return $this->groupMapping[$group];
+    if (!isset($this->groupMapping[$entityTypeId][$group])) {
+      $last = end($this->groupMapping[$entityTypeId]);
+      $this->groupMapping[$entityTypeId][$group] = ++$last;
+    }
+    return $this->groupMapping[$entityTypeId][$group];
   }
 
 }
