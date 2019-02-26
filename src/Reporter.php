@@ -35,6 +35,7 @@ class Reporter {
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldmanager;
+
   /**
    * The permission handler.
    *
@@ -71,6 +72,13 @@ class Reporter {
   protected $groupMapping = [];
 
   /**
+   * The histogram manager service.
+   *
+   * @var \Drupal\sampler\HistogramManager
+   */
+  protected $histogramManager;
+
+  /**
    * Reporter constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -83,13 +91,16 @@ class Reporter {
    *   The Permission handler.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
+   * @param \Drupal\sampler\HistogramManager $histogramManager
+   *   The histogram manager service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $bundle_info, EntityFieldManagerInterface $entity_field_manager, PermissionHandlerInterface $permission_handler, Connection $connection) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $bundle_info, EntityFieldManagerInterface $entity_field_manager, PermissionHandlerInterface $permission_handler, Connection $connection, HistogramManager $histogramManager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->bundleInfo = $bundle_info;
     $this->entityFieldmanager = $entity_field_manager;
     $this->permissionHandler = $permission_handler;
     $this->connection = $connection;
+    $this->histogramManager = $histogramManager;
 
     foreach ($this->entityTypeManager->getDefinitions() as $definition) {
       if ($definition->getBundleEntityType() && $definition->getBaseTable()) {
@@ -105,16 +116,26 @@ class Reporter {
    *
    * @return $this
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function collect(): Reporter {
     $report = $this->entityData();
 
-    $report['histogram'] = array_merge_recursive(
-      $this->revisionHistogram(),
-      $this->paragraphHistogram()
-    );
-
+    $report['histogram'] = [];
+    foreach ($this->bundledEntityTypes as $entityTypeId) {
+      $report['histogram'][$entityTypeId] = [];
+      foreach ($this->histogramManager->getDefinitions() as $definition) {
+        /** @var \Drupal\sampler\HistogramInterface $instance */
+        $instance = $this->histogramManager->createInstance($definition['id']);
+        if ($instance->isApplicable($entityTypeId)) {
+          $report['histogram'] = array_merge_recursive(
+            $report['histogram'],
+            $instance->build($entityTypeId)
+          );
+        }
+      }
+    }
+    $report['histogram'] = array_filter($report['histogram']);
     $this->report = $report;
     return $this;
   }
@@ -191,96 +212,6 @@ class Reporter {
     }
 
     return $structure;
-  }
-
-  /**
-   * Create a histogram of entities and their revisions.
-   *
-   * @return array
-   *   The histogram.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function revisionHistogram(): array {
-    $histogram = [];
-
-    foreach ($this->bundledEntityTypes as $entityTypeId) {
-      $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
-      if (!$entityTypeDefinition->isRevisionable()) {
-        continue;
-      }
-
-      $histogram[$entityTypeId] = ['revision' => []];
-      $revisionTable = $entityTypeDefinition->getRevisionTable();
-      $idKey = $entityTypeDefinition->getKey('id');
-      $revisionId = $entityTypeDefinition->getKey('revision');
-
-      $query = $this->connection->select($revisionTable, 'r');
-      $query->addExpression('count(' . $revisionId . ')', 'count');
-      $query->groupBy($idKey);
-
-      $results = $query->execute();
-      foreach ($results as $record) {
-        if (!isset($histogram[$entityTypeId]['revision'][$record->count])) {
-          $histogram[$entityTypeId]['revision'][$record->count] = 1;
-          continue;
-        }
-        $histogram[$entityTypeId]['revision'][$record->count]++;
-      }
-
-      foreach ($histogram as $entityTypeId => $counts) {
-        ksort($histogram[$entityTypeId]['revision']);
-      }
-    }
-
-    return $histogram;
-  }
-
-  /**
-   * Create a histogram of entities and their paragraphs.
-   *
-   * @return array
-   *   The histogram.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function paragraphHistogram(): array {
-    $histogram = [];
-
-    $entityTypeId = 'paragraph';
-    if (!$this->entityTypeManager->hasDefinition($entityTypeId)) {
-      return $histogram;
-    }
-
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
-    $dataTable = $entityTypeDefinition->getDataTable();
-
-    $query = $this->connection
-      ->select($dataTable, 'r')
-      ->fields('r', ['parent_type']);
-
-    $query->isNotNull('parent_type');
-    $query->addExpression('count(id)', 'count');
-    $query->groupBy('parent_type');
-    $query->groupBy('parent_id');
-
-    $results = $query->execute();
-    foreach ($results as $record) {
-      if (!isset($histogram[$record->parent_type])) {
-        $histogram[$record->parent_type] = ['paragraph' => []];
-      }
-      if (!isset($histogram[$record->parent_type]['paragraph'][$record->count])) {
-        $histogram[$record->parent_type]['paragraph'][$record->count] = 1;
-        continue;
-      }
-      $histogram[$record->parent_type]['paragraph'][$record->count]++;
-    }
-
-    foreach ($histogram as $parentType => $counts) {
-      ksort($histogram[$parentType]['paragraph']);
-    }
-
-    return $histogram;
   }
 
   /**
