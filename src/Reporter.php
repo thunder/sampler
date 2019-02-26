@@ -164,7 +164,7 @@ class Reporter {
 
         $query = $this->connection->select($settings['baseTable'], 'b');
         $query->condition($settings['bundleField'], $group);
-        $entityData[$settings['groupKey']][$mapping]['instances'] = $query->countQuery()->execute()->fetchField();
+        $entityData[$settings['groupKey']][$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
         if ($entityTypeId !== 'user') {
           $fields = array_diff_key(
