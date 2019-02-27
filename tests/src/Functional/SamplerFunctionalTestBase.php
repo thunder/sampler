@@ -52,17 +52,22 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *
    * @param string $type
    *   The type of nodes to create.
-   * @param int $number
+   * @param int $numberOfNodes
    *   The number of nodes to create.
+   * @param int $numberOfRevisions
+   *   The number of additional revisions to create for each node.
    */
-  protected function createNodesOfType(string $type, int $number) {
-    for ($i = 0; $i < $number; $i++) {
+  protected function createNodesOfType(string $type, int $numberOfNodes, int $numberOfRevisions) {
+    for ($i = 0; $i < $numberOfNodes; $i++) {
       $node = Node::create([
         'type' => $type,
         'title' => $this->randomString(),
       ]);
 
-      $node->save();
+      for ($j = 0; $j < $numberOfRevisions; $j++) {
+        $node->setNewRevision(TRUE);
+        $node->save();
+      }
     }
   }
 

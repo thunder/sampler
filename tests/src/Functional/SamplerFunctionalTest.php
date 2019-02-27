@@ -57,11 +57,11 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $nodeTypeOne = 'type_one';
     $nodeTypeTwo = 'type_two';
 
-    $numberOfNodesTypeOne = 5;
-    $numberOfNodesTypeTwo = 6;
+    $numberOfNodesTypeOne = 2;
+    $numberOfNodesTypeTwo = 3;
 
-    $this->createNodesOfType($nodeTypeOne, $numberOfNodesTypeOne);
-    $this->createNodesOfType($nodeTypeTwo, $numberOfNodesTypeTwo);
+    $this->createNodesOfType($nodeTypeOne, $numberOfNodesTypeOne, 1);
+    $this->createNodesOfType($nodeTypeTwo, $numberOfNodesTypeTwo, 1);
 
     $report = $this->container->get('sampler.reporter')
       ->setAnonymize(FALSE)
@@ -76,6 +76,32 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $this->assertEquals(2, $nodeReport['bundles'][$nodeTypeOne]['fields']);
     $this->assertEquals(0, $nodeReport['bundles'][$nodeTypeTwo]['fields']);
+  }
+
+  /**
+   * Test sampling of data for revision histograms.
+   */
+  public function testRevisionHistogramDataSampling() {
+    $nodeTypeOne = 'type_one';
+
+    $numberOfNodesWithOneRevisions = 3;
+    $numberOfNodesWithTwoRevisions = 2;
+    $numberOfNodesWithThreeRevisions = 1;
+
+    $this->createNodesOfType($nodeTypeOne, $numberOfNodesWithOneRevisions, 1);
+    $this->createNodesOfType($nodeTypeOne, $numberOfNodesWithTwoRevisions, 2);
+    $this->createNodesOfType($nodeTypeOne, $numberOfNodesWithThreeRevisions, 3);
+
+    $report = $this->container->get('sampler.reporter')
+      ->setAnonymize(FALSE)
+      ->collect()
+      ->getReport();
+
+    $histogramReport = $report['histogram'];
+
+    $this->assertEquals($numberOfNodesWithOneRevisions, $histogramReport['node']['revision'][1]);
+    $this->assertEquals($numberOfNodesWithTwoRevisions, $histogramReport['node']['revision'][2]);
+    $this->assertEquals($numberOfNodesWithThreeRevisions, $histogramReport['node']['revision'][3]);
   }
 
 }
