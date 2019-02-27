@@ -63,8 +63,6 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
       ->collect()
       ->getReport();
 
-    file_put_contents('/tmp/debug.txt', json_encode($report, JSON_PRETTY_PRINT));
-
     $nodeReport = $report['node'];
 
     $this->assertEquals(18, $nodeReport['base_fields']);
@@ -73,9 +71,6 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $this->assertEquals(2, $nodeReport['bundles'][$nodeTypeOne]['fields']);
     $this->assertEquals(0, $nodeReport['bundles'][$nodeTypeTwo]['fields']);
-
-    $this->assertTrue(FALSE);
-
   }
 
 }
