@@ -71,6 +71,13 @@ class Reporter {
   protected $groupMapping = [];
 
   /**
+   * Store if data should be anonymized.
+   *
+   * @var bool
+   */
+  protected $anonymize;
+
+  /**
    * Reporter constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -98,6 +105,7 @@ class Reporter {
     }
 
     $this->bundledEntityTypes[] = 'user';
+    $this->setAnonymize(TRUE);
   }
 
   /**
@@ -126,7 +134,7 @@ class Reporter {
    *   The file to put the report into.
    */
   public function output($filename = NULL) {
-    $report = $this->getFormattedReport();
+    $report = $this->getReport(TRUE);
 
     if ($filename) {
       file_put_contents($filename, $report);
@@ -134,6 +142,39 @@ class Reporter {
     else {
       print $report;
     }
+  }
+
+  /**
+   * Get the report.
+   *
+   * @param bool $formatted
+   *   If set to true, the report will be formatted into a string.
+   *
+   * @return array|string
+   *   The report.
+   */
+  public function getReport(bool $formatted = FALSE) {
+    if ($formatted === TRUE) {
+      return $this->getFormattedReport();
+    }
+    return $this->report;
+  }
+
+  /**
+   * Set anonymize flag.
+   *
+   * If set to true, bundle and role names are anonymized in output.
+   * Otherwise the machine name of bundles and roles are printed.
+   *
+   * @param bool $anonymize
+   *   Anonymize or not.
+   *
+   * @return $this
+   */
+  public function setAnonymize(bool $anonymize): Reporter {
+    $this->anonymize = $anonymize;
+
+    return $this;
   }
 
   /**
@@ -394,6 +435,10 @@ class Reporter {
    *   The mapped value.
    */
   protected function getGroupMapping($entityTypeId, $group): string {
+    if ($this->anonymize === FALSE) {
+      return $group;
+    }
+
     if (!isset($this->groupMapping[$entityTypeId])) {
       $this->groupMapping[$entityTypeId] = [$group => 'group-0'];
       return $this->groupMapping[$entityTypeId][$group];
@@ -403,6 +448,7 @@ class Reporter {
       $last = end($this->groupMapping[$entityTypeId]);
       $this->groupMapping[$entityTypeId][$group] = ++$last;
     }
+
     return $this->groupMapping[$entityTypeId][$group];
   }
 

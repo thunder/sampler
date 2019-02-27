@@ -5,6 +5,7 @@ namespace Drupal\sampler\Command;
 use Drupal\sampler\Reporter;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Drupal\Console\Core\Command\ContainerAwareCommand;
 // phpcs:disable
@@ -42,7 +43,8 @@ class ReportCommand extends ContainerAwareCommand {
   protected function configure() {
     $this
       ->setName('sampler:report')
-      ->addArgument('filename', InputArgument::OPTIONAL, $this->trans('commands.sampler.report.arguments.filename'))
+      ->addOption('filename', NULL, InputOption::VALUE_OPTIONAL, $this->trans('commands.sampler.report.arguments.filename'), NULL)
+      ->addOption('anonymize', NULL, InputOption::VALUE_OPTIONAL, $this->trans('commands.sampler.report.arguments.anonymize'), 1)
       ->setDescription($this->trans('commands.sampler.report.description'));
   }
 
@@ -50,8 +52,11 @@ class ReportCommand extends ContainerAwareCommand {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $filename = $input->getArgument('filename');
+    $filename = $input->getOption('filename');
+    $anonymize = $input->getOption('anonymize');
+
     $this->reporter
+      ->setAnonymize($anonymize)
       ->collect()
       ->output($filename);
   }
