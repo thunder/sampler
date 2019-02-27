@@ -2,6 +2,11 @@
 
 namespace Drupal\Tests\sampler\Functional;
 
+/**
+ * Tests the sampler module.
+ *
+ * @group sampler
+ */
 class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
   /**

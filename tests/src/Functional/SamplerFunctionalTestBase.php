@@ -36,7 +36,7 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
   protected function createUsersWithRole(string $rid, int $number) {
     for ($i = 0; $i < $number; $i++) {
       $user = [];
-      $user['name'] = !empty($name) ? $name : $this->randomMachineName();
+      $user['name'] = $this->randomMachineName();
       $user['mail'] = $user['name'] . '@example.com';
       $user['pass'] = user_password();
       $user['status'] = 1;
