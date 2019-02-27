@@ -335,7 +335,7 @@ class Reporter {
     // Find all roles, that have these permissions.
     $roles = [];
     foreach ($permissions as $permissionName => $permission) {
-      $roles += user_roles(FALSE, $permissionName);
+      $roles += user_roles(TRUE, $permissionName);
     }
 
     return array_keys($roles);
