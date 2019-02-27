@@ -42,7 +42,7 @@ class SamplerCommands extends DrushCommands {
    * @option anonymize Option to anonymize the output. I.e. show actual bundle names or replace them with generic names. The given value will be converted to boolean.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-
+   *
    * @command sampler:report
    */
   public function report(array $options = ['file' => NULL, 'anonymize' => '1']) {
