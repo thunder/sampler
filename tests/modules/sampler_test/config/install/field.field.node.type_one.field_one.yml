@@ -2,14 +2,14 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_two
-    - node.type.one
-id: node.one.field_two
-field_name: field_two
+    - field.storage.node.field_one
+    - node.type.type_one
+id: node.one.field_one
+field_name: field_one
 entity_type: node
-bundle: one
-label: 'Field two'
-description: 'Field two.'
+bundle: type_one
+label: 'Field one'
+description: 'Field one.'
 required: true
 translatable: false
 default_value: {  }
