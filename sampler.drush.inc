@@ -14,7 +14,7 @@ function sampler_drush_command() {
     'description' => dt('Create report for the Thunder performance project.'),
     'options' => [
       'file' => [
-        'description' => dt('If a filename is given, the report will be written into that file. Otherwise, the report will be printed to screen.'),
+        'description' => dt('If a file is given, the report will be written into that file. Otherwise, the report will be printed to screen.'),
         'example-value' => 'report.json',
       ],
       'anonymize' => [

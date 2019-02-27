@@ -42,7 +42,7 @@ class ReportCommand extends ContainerAwareCommand {
   protected function configure() {
     $this
       ->setName('sampler:report')
-      ->addOption('filename', NULL, InputOption::VALUE_OPTIONAL, $this->trans('commands.sampler.report.options.filename'), NULL)
+      ->addOption('file', NULL, InputOption::VALUE_OPTIONAL, $this->trans('commands.sampler.report.options.file'), NULL)
       ->addOption('anonymize', NULL, InputOption::VALUE_OPTIONAL, $this->trans('commands.sampler.report.options.anonymize'), 1)
       ->setDescription($this->trans('commands.sampler.report.description'));
   }
@@ -51,13 +51,13 @@ class ReportCommand extends ContainerAwareCommand {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $filename = $input->getOption('filename');
+    $file = $input->getOption('file');
     $anonymize = $input->getOption('anonymize');
 
     $this->reporter
       ->setAnonymize($anonymize)
       ->collect()
-      ->output($filename);
+      ->output($file);
   }
 
 }

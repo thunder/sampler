@@ -130,14 +130,14 @@ class Reporter {
   /**
    * Print the report.
    *
-   * @param null|string $filename
+   * @param null|string $file
    *   The file to put the report into.
    */
-  public function output($filename = NULL) {
+  public function output($file = NULL) {
     $report = $this->getReport(TRUE);
 
-    if ($filename) {
-      file_put_contents($filename, $report);
+    if ($file) {
+      file_put_contents($file, $report);
     }
     else {
       print $report;
