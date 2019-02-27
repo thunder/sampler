@@ -71,6 +71,13 @@ class Reporter {
   protected $groupMapping = [];
 
   /**
+   * Store if data should be anonymized.
+   *
+   * @var bool
+   */
+  protected $anonymize;
+
+  /**
    * Reporter constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -98,6 +105,7 @@ class Reporter {
     }
 
     $this->bundledEntityTypes[] = 'user';
+    $this->setAnonymize(TRUE);
   }
 
   /**
@@ -122,18 +130,51 @@ class Reporter {
   /**
    * Print the report.
    *
-   * @param null|string $filename
+   * @param null|string $file
    *   The file to put the report into.
    */
-  public function output($filename = NULL) {
-    $report = $this->getFormattedReport();
+  public function output($file = NULL) {
+    $report = $this->getReport(TRUE);
 
-    if ($filename) {
-      file_put_contents($filename, $report);
+    if ($file) {
+      file_put_contents($file, $report);
     }
     else {
       print $report;
     }
+  }
+
+  /**
+   * Get the report.
+   *
+   * @param bool $formatted
+   *   If set to true, the report will be formatted into a string.
+   *
+   * @return array|string
+   *   The report.
+   */
+  public function getReport(bool $formatted = FALSE) {
+    if ($formatted === TRUE) {
+      return $this->getFormattedReport();
+    }
+    return $this->report;
+  }
+
+  /**
+   * Set anonymize flag.
+   *
+   * If set to true, bundle and role names are anonymized in output.
+   * Otherwise the machine name of bundles and roles are printed.
+   *
+   * @param bool $anonymize
+   *   Anonymize or not.
+   *
+   * @return $this
+   */
+  public function setAnonymize(bool $anonymize): Reporter {
+    $this->anonymize = $anonymize;
+
+    return $this;
   }
 
   /**
@@ -294,7 +335,7 @@ class Reporter {
     // Find all roles, that have these permissions.
     $roles = [];
     foreach ($permissions as $permissionName => $permission) {
-      $roles += user_roles(FALSE, $permissionName);
+      $roles += user_roles(TRUE, $permissionName);
     }
 
     return array_keys($roles);
@@ -319,7 +360,7 @@ class Reporter {
     if ($entityTypeId === 'user') {
       $settings['baseTable'] = 'user__roles';
       $settings['bundleField'] = 'roles_target_id';
-      $settings['groups'] = user_roles();
+      $settings['groups'] = user_roles(TRUE);
       $settings['groupKey'] = 'roles';
     }
     else {
@@ -394,6 +435,10 @@ class Reporter {
    *   The mapped value.
    */
   protected function getGroupMapping($entityTypeId, $group): string {
+    if ($this->anonymize === FALSE) {
+      return $group;
+    }
+
     if (!isset($this->groupMapping[$entityTypeId])) {
       $this->groupMapping[$entityTypeId] = [$group => 'group-0'];
       return $this->groupMapping[$entityTypeId][$group];
@@ -403,6 +448,7 @@ class Reporter {
       $last = end($this->groupMapping[$entityTypeId]);
       $this->groupMapping[$entityTypeId][$group] = ++$last;
     }
+
     return $this->groupMapping[$entityTypeId][$group];
   }
 

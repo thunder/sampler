@@ -31,6 +31,11 @@ or
 
 You should see a json containing the sampled data. If you prefer to put the information into a file add a filename as parameter:
 
-    drupal sampler:report report.json    
+    drupal sampler:report --file=report.json
  
 This will write the data into the file report.json in your docroot.
+
+By default, the sampler replaces bundle names with generic names. if you want to see the actual bundle names in the report,
+you can switch the behaviour with the anonymize option:
+
+    drupal sampler:report --anonymize=0
