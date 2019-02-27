@@ -360,7 +360,7 @@ class Reporter {
     if ($entityTypeId === 'user') {
       $settings['baseTable'] = 'user__roles';
       $settings['bundleField'] = 'roles_target_id';
-      $settings['groups'] = user_roles();
+      $settings['groups'] = user_roles(TRUE);
       $settings['groupKey'] = 'roles';
     }
     else {
