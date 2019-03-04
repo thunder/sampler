@@ -79,6 +79,13 @@ class Reporter {
   protected $histogramManager;
 
   /**
+   * Store if data should be anonymized.
+   *
+   * @var bool
+   */
+  protected $anonymize;
+
+  /**
    * Reporter constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -109,6 +116,7 @@ class Reporter {
     }
 
     $this->bundledEntityTypes[] = 'user';
+    $this->setAnonymize(TRUE);
   }
 
   /**
@@ -143,18 +151,51 @@ class Reporter {
   /**
    * Print the report.
    *
-   * @param null|string $filename
+   * @param null|string $file
    *   The file to put the report into.
    */
-  public function output($filename = NULL) {
-    $report = $this->getFormattedReport();
+  public function output($file = NULL) {
+    $report = $this->getReport(TRUE);
 
-    if ($filename) {
-      file_put_contents($filename, $report);
+    if ($file) {
+      file_put_contents($file, $report);
     }
     else {
       print $report;
     }
+  }
+
+  /**
+   * Get the report.
+   *
+   * @param bool $formatted
+   *   If set to true, the report will be formatted into a string.
+   *
+   * @return array|string
+   *   The report.
+   */
+  public function getReport(bool $formatted = FALSE) {
+    if ($formatted === TRUE) {
+      return $this->getFormattedReport();
+    }
+    return $this->report;
+  }
+
+  /**
+   * Set anonymize flag.
+   *
+   * If set to true, bundle and role names are anonymized in output.
+   * Otherwise the machine name of bundles and roles are printed.
+   *
+   * @param bool $anonymize
+   *   Anonymize or not.
+   *
+   * @return $this
+   */
+  public function setAnonymize(bool $anonymize): Reporter {
+    $this->anonymize = $anonymize;
+
+    return $this;
   }
 
   /**
@@ -180,12 +221,12 @@ class Reporter {
       $entityData = [];
       $entityData['base_fields'] = count($baseFields);
 
-      foreach (array_keys($settings['groups']) as $mapping => $group) {
-        $this->setGroupMapping($entityTypeId, $group, $mapping);
+      foreach (array_keys($settings['groups']) as $group) {
+        $mapping = $this->getGroupMapping($entityTypeId, $group);
 
         $query = $this->connection->select($settings['baseTable'], 'b');
         $query->condition($settings['bundleField'], $group);
-        $entityData[$settings['groupKey']][$mapping]['instances'] = $query->countQuery()->execute()->fetchField();
+        $entityData[$settings['groupKey']][$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
         if ($entityTypeId !== 'user') {
           $fields = array_diff_key(
@@ -195,13 +236,6 @@ class Reporter {
           $entityData[$settings['groupKey']][$mapping]['fields'] = count($fields);
         }
       }
-
-      // Sort groups by instance count. Since we do not provide group names
-      // we can use this order to find averages between different installations
-      // even if they call their groups differently.
-      usort($entityData[$settings['groupKey']], function ($a, $b) {
-        return $a['instances'] < $b['instances'];
-      });
 
       if ($entityTypeId === 'user') {
         $roleCounts = $entityData[$settings['groupKey']];
@@ -232,7 +266,7 @@ class Reporter {
     // Find all roles, that have these permissions.
     $roles = [];
     foreach ($permissions as $permissionName => $permission) {
-      $roles += user_roles(FALSE, $permissionName);
+      $roles += user_roles(TRUE, $permissionName);
     }
 
     return array_keys($roles);
@@ -257,7 +291,7 @@ class Reporter {
     if ($entityTypeId === 'user') {
       $settings['baseTable'] = 'user__roles';
       $settings['bundleField'] = 'roles_target_id';
-      $settings['groups'] = user_roles();
+      $settings['groups'] = user_roles(TRUE);
       $settings['groupKey'] = 'roles';
     }
     else {
@@ -288,7 +322,7 @@ class Reporter {
       $editorRoles = $this->getEditorRoles($p);
 
       foreach ($editorRoles as $editorRole) {
-        $editingUsers[$p]['instances'] += $roleCounts[$editorRole]['instances'];
+        $editingUsers[$p]['instances'] += $roleCounts[$this->getGroupMapping('user', $editorRole)]['instances'];
       }
     }
 
@@ -328,15 +362,25 @@ class Reporter {
    * @param string $group
    *   The group to map.
    *
-   * @return int
+   * @return string
    *   The mapped value.
    */
-  protected function getGroupMapping($entityTypeId, $group): int {
-    if (!isset($this->groupMapping[$entityTypeId][$group])) {
-      throw new \InvalidArgumentException('Mapping does not exists');
+  protected function getGroupMapping($entityTypeId, $group): string {
+    if ($this->anonymize === FALSE) {
+      return $group;
     }
 
-    return $this->groupMapping[$group];
+    if (!isset($this->groupMapping[$entityTypeId])) {
+      $this->groupMapping[$entityTypeId] = [$group => 'group-0'];
+      return $this->groupMapping[$entityTypeId][$group];
+    }
+
+    if (!isset($this->groupMapping[$entityTypeId][$group])) {
+      $last = end($this->groupMapping[$entityTypeId]);
+      $this->groupMapping[$entityTypeId][$group] = ++$last;
+    }
+
+    return $this->groupMapping[$entityTypeId][$group];
   }
 
 }
