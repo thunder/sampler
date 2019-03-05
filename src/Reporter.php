@@ -136,13 +136,12 @@ class Reporter {
         /** @var \Drupal\sampler\HistogramInterface $instance */
         $instance = $this->histogramManager->createInstance($definition['id']);
         if ($instance->isApplicable($entityTypeId)) {
-          $report['histogram'] = array_merge_recursive(
-            $report['histogram'],
-            $instance->build($entityTypeId)
-          );
+          $report['histogram'][$entityTypeId][$definition['id']] = $instance->build($entityTypeId);
         }
       }
+      $report['histogram'][$entityTypeId] = array_filter($report['histogram'][$entityTypeId]);
     }
+
     $report['histogram'] = array_filter($report['histogram']);
     $this->report = $report;
     return $this;

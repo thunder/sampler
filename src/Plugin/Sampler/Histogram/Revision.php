@@ -8,12 +8,12 @@ use Drupal\sampler\HistogramBase;
  * Builds histogram for revisionalbe entity types.
  *
  * @SamplerHistogram(
- *   id = "revisionable",
- *   label = @Translation("Revisionable"),
- *   description = @Translation("Builds histogram for revisionalbe entity types.")
+ *   id = "revision",
+ *   label = @Translation("Revision"),
+ *   description = @Translation("Builds histogram for revisions.")
  * )
  */
-class Revisionable extends HistogramBase {
+class Revision extends HistogramBase {
 
   /**
    * {@inheritdoc}
@@ -27,7 +27,7 @@ class Revisionable extends HistogramBase {
    * {@inheritdoc}
    */
   public function build($entityTypeId) {
-    $histogram = ['revision' => []];
+    $histogram = [];
 
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
     $revisionTable = $entityTypeDefinition->getRevisionTable();
@@ -41,16 +41,16 @@ class Revisionable extends HistogramBase {
 
     $results = $query->execute();
     foreach ($results as $record) {
-      if (!isset($histogram['revision'][$record->count])) {
-        $histogram['revision'][$record->count] = 1;
+      if (!isset($histogram[$record->count])) {
+        $histogram[$record->count] = 1;
         continue;
       }
-      $histogram['revision'][$record->count]++;
+      $histogram[$record->count]++;
     }
 
-    ksort($histogram['revision']);
+    ksort($histogram);
 
-    return [$entityTypeId => $histogram];
+    return $histogram;
   }
 
 }
