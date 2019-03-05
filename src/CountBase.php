@@ -4,14 +4,15 @@ namespace Drupal\sampler;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Base class for Histogram plugin plugins.
+ * Base class for count plugins.
  */
-abstract class HistogramBase extends PluginBase implements ContainerFactoryPluginInterface, HistogramInterface {
+abstract class CountBase extends PluginBase implements ContainerFactoryPluginInterface, CountInterface {
 
   /**
    * The entity type manager service.
@@ -19,6 +20,13 @@ abstract class HistogramBase extends PluginBase implements ContainerFactoryPlugi
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The entity field manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
 
   /**
    * The database connection.
@@ -30,7 +38,7 @@ abstract class HistogramBase extends PluginBase implements ContainerFactoryPlugi
   /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
-   * Overrides the construction of sampler histogram plugins to inject some services.
+   * Overrides the construction of sampler count plugins to inject some services.
    *
    * @param array $configuration
    *   The plugin configuration, i.e. an array with configuration values keyed
@@ -43,13 +51,16 @@ abstract class HistogramBase extends PluginBase implements ContainerFactoryPlugi
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   The entity field manager service.
    * @param \Drupal\Core\Database\Connection
    *   The database connection.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, Connection $connection) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entityTypeManager;
+    $this->entityFieldManager = $entityFieldManager;
     $this->connection = $connection;
   }
 
@@ -62,6 +73,7 @@ abstract class HistogramBase extends PluginBase implements ContainerFactoryPlugi
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
+      $container->get('entity_field.manager'),
       $container->get('database')
     );
   }

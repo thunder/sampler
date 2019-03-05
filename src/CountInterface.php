@@ -5,9 +5,9 @@ namespace Drupal\sampler;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
- * Defines an interface for entity data plugins.
+ * Defines an interface for count plugins.
  */
-interface SamplerCountInterface extends PluginInspectionInterface {
+interface CountInterface extends PluginInspectionInterface {
 
   /**
    * Collects data for the provided entity type ID.

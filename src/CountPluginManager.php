@@ -9,10 +9,10 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 /**
  * Provides the entity data plugin manager.
  */
-class SamplerCountPluginManager extends DefaultPluginManager {
+class CountPluginManager extends DefaultPluginManager {
 
   /**
-   * Constructs a new SamplerCountPluginManager object.
+   * Constructs a new CountPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -23,7 +23,7 @@ class SamplerCountPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Sampler/Count', $namespaces, $module_handler, 'Drupal\sampler\SamplerCountInterface', 'Drupal\sampler\Annotation\SamplerCountData');
+    parent::__construct('Plugin/Sampler/Count', $namespaces, $module_handler, 'Drupal\sampler\CountInterface', 'Drupal\sampler\Annotation\SamplerCount');
 
     $this->alterInfo('sampler_count_plugin_info');
     $this->setCacheBackend($cache_backend, 'sampler_count_plugins');

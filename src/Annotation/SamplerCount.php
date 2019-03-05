@@ -7,12 +7,12 @@ use Drupal\Component\Annotation\Plugin;
 /**
  * Defines a count plugin item annotation object.
  *
- * @see \Drupal\sampler\SamplerCountPluginManager
+ * @see \Drupal\sampler\CountPluginManager
  * @see plugin_api
  *
  * @Annotation
  */
-class SamplerCountData extends Plugin {
+class SamplerCount extends Plugin {
 
 
   /**
