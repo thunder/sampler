@@ -21,14 +21,14 @@ interface HistogramInterface extends PluginInspectionInterface {
   public function isApplicable($entityTypeId);
 
   /**
-   * Builds a histogram for the provided entity type ID.
+   * Build histogram for the provided entity type ID.
    *
    * @param int $entityTypeId
    *   The entity type ID.
    *
    * @return array
-   *   The histogram arrary.
+   *   The histogram array.
    */
-  public function build($entityTypeId);
+  public function collect($entityTypeId);
 
 }

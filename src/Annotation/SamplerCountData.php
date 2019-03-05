@@ -5,14 +5,14 @@ namespace Drupal\sampler\Annotation;
 use Drupal\Component\Annotation\Plugin;
 
 /**
- * Defines a Histogram plugin item annotation object.
+ * Defines a count plugin item annotation object.
  *
- * @see \Drupal\sampler\HistogramPluginManager
+ * @see \Drupal\sampler\SamplerCountPluginManager
  * @see plugin_api
  *
  * @Annotation
  */
-class SamplerHistogram extends Plugin {
+class SamplerCountData extends Plugin {
 
 
   /**

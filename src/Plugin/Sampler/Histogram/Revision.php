@@ -26,7 +26,7 @@ class Revision extends HistogramBase {
   /**
    * {@inheritdoc}
    */
-  public function build($entityTypeId) {
+  public function collect($entityTypeId) {
     $histogram = [];
 
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);

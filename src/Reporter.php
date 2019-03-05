@@ -74,9 +74,9 @@ class Reporter {
   /**
    * The histogram manager service.
    *
-   * @var \Drupal\sampler\HistogramManager
+   * @var \Drupal\sampler\HistogramPluginManager
    */
-  protected $histogramManager;
+  protected $histogramPluginManager;
 
   /**
    * Store if data should be anonymized.
@@ -98,16 +98,16 @@ class Reporter {
    *   The Permission handler.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
-   * @param \Drupal\sampler\HistogramManager $histogramManager
+   * @param \Drupal\sampler\HistogramPluginManager $histogram_plugin_manager
    *   The histogram manager service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $bundle_info, EntityFieldManagerInterface $entity_field_manager, PermissionHandlerInterface $permission_handler, Connection $connection, HistogramManager $histogramManager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $bundle_info, EntityFieldManagerInterface $entity_field_manager, PermissionHandlerInterface $permission_handler, Connection $connection, HistogramPluginManager $histogram_plugin_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->bundleInfo = $bundle_info;
     $this->entityFieldmanager = $entity_field_manager;
     $this->permissionHandler = $permission_handler;
     $this->connection = $connection;
-    $this->histogramManager = $histogramManager;
+    $this->histogramPluginManager = $histogram_plugin_manager;
 
     foreach ($this->entityTypeManager->getDefinitions() as $definition) {
       if ($definition->getBundleEntityType() && $definition->getBaseTable()) {
@@ -127,21 +127,8 @@ class Reporter {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function collect(): Reporter {
-    $report = $this->entityData();
-    $report['histogram'] = [];
-
-    foreach ($this->bundledEntityTypes as $entityTypeId) {
-      $report['histogram'][$entityTypeId] = [];
-
-      foreach ($this->histogramManager->getDefinitions() as $definition) {
-        /** @var \Drupal\sampler\HistogramInterface $instance */
-        $instance = $this->histogramManager->createInstance($definition['id']);
-        if ($instance->isApplicable($entityTypeId)) {
-          $report['histogram'][$entityTypeId][$definition['id']] = $instance->build($entityTypeId);
-        }
-      }
-
-    }
+    $report['count'] = $this->count();
+    $report['histogram'] = $this->histogram();
 
     $this->report = $report;
     return $this;
@@ -210,10 +197,13 @@ class Reporter {
   /**
    * Retrieve counts per entity.
    */
-  protected function entityData(): array {
-    $structure = [];
+  protected function count(): array {
+    $data = [];
 
     foreach ($this->bundledEntityTypes as $entityTypeId) {
+      $data[$entityTypeId] = [];
+
+      /*
       $settings = $this->getGroupingSettings($entityTypeId);
 
       $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
@@ -241,10 +231,37 @@ class Reporter {
         $entityData['editing_users'] = $this->countEditingUsers($roleCounts);
       }
 
-      $structure[$entityTypeId] = $entityData;
+      $data[$entityTypeId] = $entityData
+*/
+
     }
 
-    return $structure;
+    return $data;
+  }
+
+  /**
+   * Collect histogram data from plugins.
+   *
+   * @return array
+   *  The histogram data
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  protected function histogram(): array {
+    $data = [];
+
+    foreach ($this->bundledEntityTypes as $entityTypeId) {
+      $data[$entityTypeId] = [];
+
+      foreach ($this->histogramPluginManager->getDefinitions() as $definition) {
+        /** @var \Drupal\sampler\HistogramInterface $instance */
+        $instance = $this->histogramPluginManager->createInstance($definition['id']);
+        if ($instance->isApplicable($entityTypeId)) {
+          $data[$entityTypeId][$definition['id']] = $instance->collect($entityTypeId);
+        }
+      }
+    }
+
+    return $data;
   }
 
   /**
