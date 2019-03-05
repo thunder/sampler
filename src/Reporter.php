@@ -128,10 +128,11 @@ class Reporter {
    */
   public function collect(): Reporter {
     $report = $this->entityData();
-
     $report['histogram'] = [];
+
     foreach ($this->bundledEntityTypes as $entityTypeId) {
       $report['histogram'][$entityTypeId] = [];
+
       foreach ($this->histogramManager->getDefinitions() as $definition) {
         /** @var \Drupal\sampler\HistogramInterface $instance */
         $instance = $this->histogramManager->createInstance($definition['id']);
@@ -139,10 +140,9 @@ class Reporter {
           $report['histogram'][$entityTypeId][$definition['id']] = $instance->build($entityTypeId);
         }
       }
-      $report['histogram'][$entityTypeId] = array_filter($report['histogram'][$entityTypeId]);
+
     }
 
-    $report['histogram'] = array_filter($report['histogram']);
     $this->report = $report;
     return $this;
   }
@@ -162,6 +162,7 @@ class Reporter {
     else {
       print $report;
     }
+
   }
 
   /**
