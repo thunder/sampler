@@ -162,7 +162,6 @@ class Reporter {
     else {
       print $report;
     }
-
   }
 
   /**
