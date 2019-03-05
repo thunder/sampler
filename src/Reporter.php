@@ -2,9 +2,6 @@
 
 namespace Drupal\sampler;
 
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
 
@@ -23,20 +20,6 @@ class Reporter {
   protected $entityTypeManager;
 
   /**
-   * The bundle information service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $bundleInfo;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldmanager;
-
-  /**
    * The permission handler.
    *
    * @var \Drupal\user\PermissionHandlerInterface
@@ -48,14 +31,7 @@ class Reporter {
    *
    * @var array
    */
-  protected $report;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
+  protected $report = [];
 
   /**
    * Entity types whose usage will get counted per bundle.
@@ -74,16 +50,9 @@ class Reporter {
   /**
    * The group count manager service.
    *
-   * @var \Drupal\sampler\CountPluginManager
+   * @var \Drupal\sampler\SamplerPluginManager
    */
-  protected $countPluginManager;
-
-  /**
-   * The histogram manager service.
-   *
-   * @var \Drupal\sampler\HistogramPluginManager
-   */
-  protected $histogramPluginManager;
+  protected $samplerPluginManager;
 
   /**
    * Store if data should be anonymized.
@@ -97,27 +66,15 @@ class Reporter {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
-   *   The bundle information service.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The entity field manager.
    * @param \Drupal\user\PermissionHandlerInterface $permission_handler
    *   The Permission handler.
-   * @param \Drupal\Core\Database\Connection $connection
-   *   The database connection.
-   * @param \Drupal\sampler\CountPluginManager $count_plugin_manager
+   * @param \Drupal\sampler\SamplerPluginManager $sampler_plugin_manager
    *   The group count manager service.
-   * @param \Drupal\sampler\HistogramPluginManager $histogram_plugin_manager
-   *   The histogram manager service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $bundle_info, EntityFieldManagerInterface $entity_field_manager, PermissionHandlerInterface $permission_handler, Connection $connection, CountPluginManager $count_plugin_manager, HistogramPluginManager $histogram_plugin_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, PermissionHandlerInterface $permission_handler, SamplerPluginManager $sampler_plugin_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->bundleInfo = $bundle_info;
-    $this->entityFieldmanager = $entity_field_manager;
     $this->permissionHandler = $permission_handler;
-    $this->connection = $connection;
-    $this->countPluginManager = $count_plugin_manager;
-    $this->histogramPluginManager = $histogram_plugin_manager;
+    $this->samplerPluginManager = $sampler_plugin_manager;
 
     foreach ($this->entityTypeManager->getDefinitions() as $definition) {
       if ($definition->getBundleEntityType() && $definition->getBaseTable()) {
@@ -137,10 +94,53 @@ class Reporter {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function collect(): Reporter {
-    $report['count'] = $this->count();
-    $report['histogram'] = $this->histogram();
+    foreach ($this->bundledEntityTypes as $entityTypeId) {
+      $this->report[$entityTypeId] = [];
 
-    $this->report = $report;
+      foreach ($this->samplerPluginManager->getDefinitions() as $definition) {
+        /** @var \Drupal\sampler\SamplerInterface $instance */
+        $instance = $this->samplerPluginManager->createInstance($definition['id']);
+        if ($instance->isApplicable($entityTypeId)) {
+          $collection = $instance->collect($entityTypeId);
+          if (is_array($collection)){
+            if (!isset($this->report[$entityTypeId][$instance->key($entityTypeId)])) {
+              $this->report[$entityTypeId][$instance->key($entityTypeId)] = [];
+            }
+            $this->report[$entityTypeId][$instance->key($entityTypeId)] = array_merge($this->report[$entityTypeId][$instance->key($entityTypeId)], $collection);
+          }
+          else {
+            $this->report[$entityTypeId][$instance->key($entityTypeId)] = $collection;
+          }
+        }
+      }
+
+      /*
+      $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
+
+      $settings = $this->getGroupingSettings($entityTypeId);
+      foreach (array_keys($settings['groups']) as $group) {
+        $mapping = $this->getGroupMapping($entityTypeId, $group);
+
+        $query = $this->connection->select($settings['baseTable'], 'b');
+        $query->condition($settings['bundleField'], $group);
+        $data[$entityTypeId][$settings['groupKey']][$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
+
+        if ($entityTypeId !== 'user') {
+          $fields = array_diff_key(
+            array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
+            array_keys($baseFields)
+          );
+          $data[$entityTypeId][$settings['groupKey']][$mapping]['fields'] = count($fields);
+        }
+      }
+
+      if ($entityTypeId === 'user') {
+        $roleCounts = $data[$entityTypeId][$settings['groupKey']];
+        $data[$entityTypeId]['editing_users'] = $this->countEditingUsers($roleCounts);
+      }
+      */
+    }
+
     return $this;
   }
 
@@ -205,74 +205,6 @@ class Reporter {
   }
 
   /**
-   * Retrieve counts per entity.
-   */
-  protected function count(): array {
-    $data = [];
-
-    foreach ($this->bundledEntityTypes as $entityTypeId) {
-      $data[$entityTypeId] = [];
-
-      foreach ($this->countPluginManager->getDefinitions() as $definition) {
-        /** @var \Drupal\sampler\CountInterface $instance */
-        $instance = $this->countPluginManager->createInstance($definition['id']);
-        $data[$entityTypeId][$definition['id']] = $instance->collect($entityTypeId);
-      }
-
-      $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
-
-      $settings = $this->getGroupingSettings($entityTypeId);
-      foreach (array_keys($settings['groups']) as $group) {
-        $mapping = $this->getGroupMapping($entityTypeId, $group);
-
-        $query = $this->connection->select($settings['baseTable'], 'b');
-        $query->condition($settings['bundleField'], $group);
-        $data[$entityTypeId][$settings['groupKey']][$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
-
-        if ($entityTypeId !== 'user') {
-          $fields = array_diff_key(
-            array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
-            array_keys($baseFields)
-          );
-          $data[$entityTypeId][$settings['groupKey']][$mapping]['fields'] = count($fields);
-        }
-      }
-
-      if ($entityTypeId === 'user') {
-        $roleCounts = $data[$entityTypeId][$settings['groupKey']];
-        $data[$entityTypeId]['editing_users'] = $this->countEditingUsers($roleCounts);
-      }
-    }
-
-    return $data;
-  }
-
-  /**
-   * Collect histogram data from plugins.
-   *
-   * @return array
-   *  The histogram data
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   */
-  protected function histogram(): array {
-    $data = [];
-
-    foreach ($this->bundledEntityTypes as $entityTypeId) {
-      $data[$entityTypeId] = [];
-
-      foreach ($this->histogramPluginManager->getDefinitions() as $definition) {
-        /** @var \Drupal\sampler\HistogramInterface $instance */
-        $instance = $this->histogramPluginManager->createInstance($definition['id']);
-        if ($instance->isApplicable($entityTypeId)) {
-          $data[$entityTypeId][$definition['id']] = $instance->collect($entityTypeId);
-        }
-      }
-    }
-
-    return $data;
-  }
-
-  /**
    * Get roles that can create, modify or delete things.
    *
    * @param string $provider
@@ -294,38 +226,6 @@ class Reporter {
     }
 
     return array_keys($roles);
-  }
-
-  /**
-   * Get some settings for grouping entities.
-   *
-   * @param string $entityTypeId
-   *   The entity type to get settings for.
-   *
-   * @return array
-   *   The settings.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function getGroupingSettings($entityTypeId): array {
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
-    $settings = [];
-
-    // For user we count per role, everything else is counted per bundle.
-    if ($entityTypeId === 'user') {
-      $settings['baseTable'] = 'user__roles';
-      $settings['bundleField'] = 'roles_target_id';
-      $settings['groups'] = user_roles(TRUE);
-      $settings['groupKey'] = 'roles';
-    }
-    else {
-      $settings['baseTable'] = $entityTypeDefinition->getBaseTable();
-      $settings['bundleField'] = $entityTypeDefinition->getKey('bundle');
-      $settings['groups'] = $this->bundleInfo->getBundleInfo($entityTypeId);
-      $settings['groupKey'] = 'bundles';
-    }
-
-    return $settings;
   }
 
   /**

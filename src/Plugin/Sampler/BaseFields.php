@@ -1,19 +1,19 @@
 <?php
 
-namespace Drupal\sampler\Plugin\Sampler\Count;
+namespace Drupal\sampler\Plugin\Sampler;
 
-use Drupal\sampler\CountBase;
+use Drupal\sampler\SamplerBase;
 
 /**
  * Counts base fields of entities.
  *
- * @SamplerCount(
+ * @Sampler(
  *   id = "base_fields",
  *   label = @Translation("Base fields"),
  *   description = @Translation("Collects base field count.")
  * )
  */
-class BaseFields extends CountBase {
+class BaseFields extends SamplerBase {
 
   /**
    * {@inheritdoc}

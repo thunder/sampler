@@ -7,7 +7,7 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 /**
  * Defines an interface for Histogram plugins.
  */
-interface HistogramInterface extends PluginInspectionInterface {
+interface SamplerInterface extends PluginInspectionInterface {
 
   /**
    * Checks if the current entity type id is supported by this plugin.
@@ -30,5 +30,15 @@ interface HistogramInterface extends PluginInspectionInterface {
    *   The histogram array.
    */
   public function collect($entityTypeId);
+
+  /**
+   * The key of the data in the result.
+   *
+   * @param int $entityTypeId
+   *   The entity type ID.
+   *
+   * @return string
+   */
+  public function key(int $entityTypeId);
 
 }

@@ -15,9 +15,19 @@ interface CountInterface extends PluginInspectionInterface {
    * @param int $entityTypeId
    *   The entity type ID.
    *
-   * @return array
-   *   The data array.
+   * @return integer
+   *   The collected information.
    */
-  public function collect($entityTypeId);
+  public function collect(int $entityTypeId);
+
+  /**
+   * The key of the data in the result.
+   *
+   * @param int $entityTypeId
+   *   The entity type ID.
+   *
+   * @return string
+   */
+  public function key(int $entityTypeId): string;
 
 }

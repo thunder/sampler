@@ -1,10 +1,7 @@
 services:
   sampler.reporter:
     class: Drupal\sampler\Reporter
-    arguments: ['@entity_type.manager', '@entity_type.bundle.info', '@entity_field.manager', '@user.permissions', '@database', '@plugin.manager.sampler_count', '@plugin.manager.sampler_histogram']
-  plugin.manager.sampler_histogram:
-    class: Drupal\sampler\HistogramPluginManager
-    parent: default_plugin_manager
-  plugin.manager.sampler_count:
-    class: Drupal\sampler\CountPluginManager
+    arguments: ['@entity_type.manager', '@user.permissions', '@plugin.manager.sampler']
+  plugin.manager.sampler:
+    class: Drupal\sampler\SamplerPluginManager
     parent: default_plugin_manager

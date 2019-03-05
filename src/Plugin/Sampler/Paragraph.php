@@ -1,26 +1,19 @@
 <?php
 
-namespace Drupal\sampler\Plugin\Sampler\Histogram;
+namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\sampler\HistogramBase;
 
 /**
  * Builds histogram for paragraphs entity type.
  *
- * @SamplerHistogram(
+ * @Sampler(
  *   id = "paragraph",
  *   label = @Translation("Paragraph"),
  *   description = @Translation("Builds histogram for paragraphs.")
  * )
  */
 class Paragraph extends HistogramBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isApplicable($entityTypeId) {
-    return TRUE;
-  }
 
   /**
    * {@inheritdoc}
@@ -50,7 +43,7 @@ class Paragraph extends HistogramBase {
 
     ksort($histogram);
 
-    return $histogram;
+    return [$this->getPluginId() => $histogram];
   }
 
 }

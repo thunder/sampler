@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\sampler\Plugin\Sampler\Histogram;
+namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\sampler\HistogramBase;
 
 /**
- * Builds histogram for revisionalbe entity types.
+ * Builds histogram for revisionable entity types.
  *
- * @SamplerHistogram(
+ * @Sampler(
  *   id = "revision",
  *   label = @Translation("Revision"),
  *   description = @Translation("Builds histogram for revisions.")
@@ -49,8 +49,7 @@ class Revision extends HistogramBase {
     }
 
     ksort($histogram);
-
-    return $histogram;
+    return [$this->getPluginId() => $histogram];
   }
 
 }

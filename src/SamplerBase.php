@@ -5,14 +5,15 @@ namespace Drupal\sampler;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Base class for count plugins.
+ * Base class for Histogram plugin plugins.
  */
-abstract class CountBase extends PluginBase implements ContainerFactoryPluginInterface, CountInterface {
+abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginInterface, SamplerInterface {
 
   /**
    * The entity type manager service.
@@ -36,6 +37,13 @@ abstract class CountBase extends PluginBase implements ContainerFactoryPluginInt
   protected $connection;
 
   /**
+   * The bundle information service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $bundleInfo;
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some services.
@@ -55,13 +63,16 @@ abstract class CountBase extends PluginBase implements ContainerFactoryPluginInt
    *   The entity field manager service.
    * @param \Drupal\Core\Database\Connection
    *   The database connection.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
+   *   The bundle information service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, EntityTypeBundleInfoInterface $bundle_info) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
     $this->connection = $connection;
+    $this->bundleInfo = $bundle_info;
   }
 
   /**
@@ -74,8 +85,23 @@ abstract class CountBase extends PluginBase implements ContainerFactoryPluginInt
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
-      $container->get('database')
+      $container->get('database'),
+      $container->get('entity_type.bundle.info')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function key($entityTypeId) {
+    return $this->getPluginId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isApplicable($entityTypeId) {
+    return TRUE;
   }
 
 }
