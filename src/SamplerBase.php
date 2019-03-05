@@ -44,6 +44,13 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   protected $bundleInfo;
 
   /**
+   * Store if data should be anonymized.
+   *
+   * @var bool
+   */
+  protected $anonymize;
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some services.
@@ -102,6 +109,13 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
    */
   public function isApplicable($entityTypeId) {
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function anonymize(bool $anonymize) {
+    $this->anonymize = $anonymize;
   }
 
 }

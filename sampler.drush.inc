@@ -38,7 +38,7 @@ function drush_sampler_report() {
     ->get('sampler.reporter');
 
   $reporter
-    ->setAnonymize($anonymize)
+    ->anonymize($anonymize)
     ->collect()
     ->output($file);
 }
