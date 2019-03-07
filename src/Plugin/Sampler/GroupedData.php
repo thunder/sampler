@@ -23,6 +23,9 @@ class GroupedData extends SamplerBase {
     $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId));
     $settings = $this->getGroupingSettings($entityTypeId);
 
+    $nodeEditingRoles = ($entityTypeId === 'user') ? $this->getEditorRoles('node') : NULL;
+    $taxonomyEditingRoles = ($entityTypeId === 'user') ? $this->getEditorRoles('taxonomy') : NULL;
+
     foreach (array_keys($settings['groups']) as $group) {
       $mapping = $this->getGroupMapping($entityTypeId, $group);
 
@@ -30,17 +33,17 @@ class GroupedData extends SamplerBase {
       $query->condition($settings['bundleField'], $group);
       $data[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
-      if ($entityTypeId !== 'user') {
+      if ($entityTypeId === 'user') {
+        $data[$mapping]['is_node_editing'] = in_array($mapping, $nodeEditingRoles);
+        $data[$mapping]['is_taxonomy_editing'] = in_array($mapping, $taxonomyEditingRoles);
+      }
+      else {
         $fields = array_diff_key(
           array_keys($this->entityFieldManager->getFieldDefinitions($entityTypeId, $group)),
           array_keys($baseFields)
         );
         $data[$mapping]['fields'] = count($fields);
       }
-    }
-
-    if ($entityTypeId === 'user') {
-      $data[$entityTypeId]['editing_users'] = $this->countEditingUsers($data);
     }
 
     return $data;
@@ -100,31 +103,6 @@ class GroupedData extends SamplerBase {
     }
 
     return array_keys($roles);
-  }
-
-  /**
-   * Count users, that can edit stuff.
-   *
-   * @param array $roleCounts
-   *   Known counts of users in roles.
-   *
-   * @return array
-   *   The number of editing users per provider.
-   */
-  protected function countEditingUsers(array $roleCounts): array {
-    $provider = ['node', 'taxonomy'];
-    $editingUsers = [];
-
-    foreach ($provider as $p) {
-      $editingUsers[$p] = ['instances' => 0];
-      $editorRoles = $this->getEditorRoles($p);
-
-      foreach ($editorRoles as $editorRole) {
-        $editingUsers[$p]['instances'] += $roleCounts[$this->getGroupMapping('user', $editorRole)]['instances'];
-      }
-    }
-
-    return $editingUsers;
   }
 
   /**

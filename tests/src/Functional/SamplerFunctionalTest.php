@@ -14,25 +14,28 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
    */
   public function testUserDataSampling() {
     $nonEditingRid = 'restricted';
-    $nodeEditingRid1 = 'node_editor_1';
-    $nodeEditingRid2 = 'node_editor_2';
-    $taxonomyEditingRid1 = 'term_editor_1';
+    $nodeEditingRid = 'node_editor';
+    $taxonomyEditingRid = 'term_editor';
+    $allEditingRid = 'all_editor';
 
     $numberOfRestricted = 1;
-    $numberOfNodeEditors1 = 2;
-    $numberOfNodeEditors2 = 3;
-    $numberOfTaxonomyEditors1 = 4;
+    $numberOfNodeEditors = 2;
+    $numberOfTaxonomyEditors = 3;
+    $numberOfAllEditors = 4;
 
+    // Create multiple roles with different editing capabilities.
     $this->createRole([], $nonEditingRid);
-    $this->createRole(['create type_one content'], $nodeEditingRid1);
-    $this->createRole(['create type_two content'], $nodeEditingRid2);
-    $this->createRole(['edit terms in vocabulary_one'], $taxonomyEditingRid1);
+    $this->createRole(['create type_one content'], $nodeEditingRid);
+    $this->createRole(['edit terms in vocabulary_one'], $taxonomyEditingRid);
+    $this->createRole(['create type_two content', 'edit terms in vocabulary_one'], $allEditingRid);
 
+    // Foreach role create a defined number of users.
     $this->createUsersWithRole($nonEditingRid, $numberOfRestricted);
-    $this->createUsersWithRole($nodeEditingRid1, $numberOfNodeEditors1);
-    $this->createUsersWithRole($nodeEditingRid2, $numberOfNodeEditors2);
-    $this->createUsersWithRole($taxonomyEditingRid1, $numberOfTaxonomyEditors1);
+    $this->createUsersWithRole($nodeEditingRid, $numberOfNodeEditors);
+    $this->createUsersWithRole($taxonomyEditingRid, $numberOfTaxonomyEditors);
+    $this->createUsersWithRole($allEditingRid, $numberOfAllEditors);
 
+    // Get the report.
     $report = $this->container->get('sampler.reporter')
       ->anonymize(FALSE)
       ->collect()
@@ -41,13 +44,25 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $userReport = $report['user'];
 
     $this->assertEquals(17, $userReport['base_fields']);
-    $this->assertEquals($numberOfRestricted, $userReport['roles'][$nonEditingRid]['instances']);
-    $this->assertEquals($numberOfNodeEditors1, $userReport['roles'][$nodeEditingRid1]['instances']);
-    $this->assertEquals($numberOfNodeEditors2, $userReport['roles'][$nodeEditingRid2]['instances']);
-    $this->assertEquals($numberOfTaxonomyEditors1, $userReport['roles'][$taxonomyEditingRid1]['instances']);
 
-    $this->assertEquals(($numberOfNodeEditors1 + $numberOfNodeEditors2), $userReport['editing_users']['node']['instances']);
-    $this->assertEquals($numberOfTaxonomyEditors1, $userReport['editing_users']['taxonomy']['instances']);
+    // Test if the report contains the correct number of users per role.
+    $this->assertEquals($numberOfRestricted, $userReport['roles'][$nonEditingRid]['instances']);
+    $this->assertEquals($numberOfNodeEditors, $userReport['roles'][$nodeEditingRid]['instances']);
+    $this->assertEquals($numberOfTaxonomyEditors, $userReport['roles'][$taxonomyEditingRid]['instances']);
+    $this->assertEquals($numberOfAllEditors, $userReport['roles'][$allEditingRid]['instances']);
+
+    // test if the report correctly determines, if roles are allow to edit nodes and terms.
+    $this->assertEquals(false, $userReport['roles'][$nonEditingRid]['is_node_editing']);
+    $this->assertEquals(false, $userReport['roles'][$nonEditingRid]['is_taxonomy_editing']);
+
+    $this->assertEquals(true, $userReport['roles'][$nodeEditingRid]['is_node_editing']);
+    $this->assertEquals(false, $userReport['roles'][$nodeEditingRid]['is_taxonomy_editing']);
+
+    $this->assertEquals(false, $userReport['roles'][$taxonomyEditingRid]['is_node_editing']);
+    $this->assertEquals(true, $userReport['roles'][$taxonomyEditingRid]['is_taxonomy_editing']);
+
+    $this->assertEquals(true, $userReport['roles'][$allEditingRid]['is_node_editing']);
+    $this->assertEquals(true, $userReport['roles'][$allEditingRid]['is_taxonomy_editing']);
   }
 
   /**
