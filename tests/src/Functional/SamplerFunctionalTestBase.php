@@ -58,6 +58,7 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *   The number of nodes to create.
    * @param int $numberOfRevisions
    *   The number of additional revisions to create for each node.
+   *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createNodesOfType(string $type, int $numberOfNodes, int $numberOfRevisions) {
