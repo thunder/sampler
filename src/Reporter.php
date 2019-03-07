@@ -3,7 +3,6 @@
 namespace Drupal\sampler;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\user\PermissionHandlerInterface;
 
 /**
  * The Reporter class.
@@ -18,13 +17,6 @@ class Reporter {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
-
-  /**
-   * The permission handler.
-   *
-   * @var \Drupal\user\PermissionHandlerInterface
-   */
-  protected $permissionHandler;
 
   /**
    * The report.
@@ -66,14 +58,11 @@ class Reporter {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\user\PermissionHandlerInterface $permission_handler
-   *   The Permission handler.
    * @param \Drupal\sampler\SamplerPluginManager $sampler_plugin_manager
    *   The group count manager service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, PermissionHandlerInterface $permission_handler, SamplerPluginManager $sampler_plugin_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, SamplerPluginManager $sampler_plugin_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->permissionHandler = $permission_handler;
     $this->samplerPluginManager = $sampler_plugin_manager;
 
     foreach ($this->entityTypeManager->getDefinitions() as $definition) {

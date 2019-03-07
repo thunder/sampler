@@ -1,7 +1,7 @@
 services:
   sampler.reporter:
     class: Drupal\sampler\Reporter
-    arguments: ['@entity_type.manager', '@user.permissions', '@plugin.manager.sampler']
+    arguments: ['@entity_type.manager', '@plugin.manager.sampler']
   plugin.manager.sampler:
     class: Drupal\sampler\SamplerPluginManager
     parent: default_plugin_manager

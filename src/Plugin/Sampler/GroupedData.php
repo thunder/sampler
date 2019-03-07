@@ -20,7 +20,7 @@ class GroupedData extends SamplerBase {
    */
   public function collect($entityTypeId) {
     $data = [];
-    $baseFields = array_keys($this->entityFieldmanager->getBaseFieldDefinitions($entityTypeId));
+    $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId));
     $settings = $this->getGroupingSettings($entityTypeId);
 
     foreach (array_keys($settings['groups']) as $group) {
@@ -32,7 +32,7 @@ class GroupedData extends SamplerBase {
 
       if ($entityTypeId !== 'user') {
         $fields = array_diff_key(
-          array_keys($this->entityFieldmanager->getFieldDefinitions($entityTypeId, $group)),
+          array_keys($this->entityFieldManager->getFieldDefinitions($entityTypeId, $group)),
           array_keys($baseFields)
         );
         $data[$mapping]['fields'] = count($fields);

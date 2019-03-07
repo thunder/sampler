@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\user\PermissionHandlerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -44,6 +45,13 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   protected $bundleInfo;
 
   /**
+   * The permission handler service.
+   *
+   * @var \Drupal\user\PermissionHandlerInterface
+   */
+  protected $permissionHandler;
+
+  /**
    * Store if data should be anonymized.
    *
    * @var bool
@@ -72,14 +80,17 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
    *   The database connection.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
    *   The bundle information service.
+   * @param \Drupal\user\PermissionHandlerInterface $permission_handler
+   *   The permission handler service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, EntityTypeBundleInfoInterface $bundle_info) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, EntityTypeBundleInfoInterface $bundle_info, PermissionHandlerInterface $permission_handler) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
     $this->connection = $connection;
     $this->bundleInfo = $bundle_info;
+    $this->permissionHandler = $permission_handler;
   }
 
   /**
@@ -93,7 +104,8 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('database'),
-      $container->get('entity_type.bundle.info')
+      $container->get('entity_type.bundle.info'),
+      $container->get('user.permissions')
     );
   }
 
