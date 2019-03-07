@@ -2,7 +2,7 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
-use Drupal\sampler\HistogramBase;
+use Drupal\sampler\SamplerBase;
 
 /**
  * Builds histogram for revisionable entity types.
@@ -13,7 +13,7 @@ use Drupal\sampler\HistogramBase;
  *   description = @Translation("Builds histogram for revisions.")
  * )
  */
-class Revision extends HistogramBase {
+class Revision extends SamplerBase {
 
   /**
    * {@inheritdoc}
@@ -50,6 +50,13 @@ class Revision extends HistogramBase {
   public function isApplicable($entityTypeId) {
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
     return $entityTypeDefinition->isRevisionable();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function key($entityTypeId) {
+    return 'histogram';
   }
 
 }

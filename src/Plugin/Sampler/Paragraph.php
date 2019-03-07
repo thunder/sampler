@@ -2,7 +2,7 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
-use Drupal\sampler\HistogramBase;
+use Drupal\sampler\SamplerBase;
 
 /**
  * Builds histogram for paragraphs entity type.
@@ -13,7 +13,7 @@ use Drupal\sampler\HistogramBase;
  *   description = @Translation("Builds histogram for paragraphs.")
  * )
  */
-class Paragraph extends HistogramBase {
+class Paragraph extends SamplerBase {
 
   /**
    * {@inheritdoc}
@@ -51,6 +51,13 @@ class Paragraph extends HistogramBase {
    */
   public function isApplicable($entityTypeId) {
     return parent::isApplicable($entityTypeId) && $this->entityTypeManager->hasDefinition('paragraph');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function key($entityTypeId) {
+    return 'histogram';
   }
 
 }

@@ -113,13 +113,6 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public function key($entityTypeId) {
-    return $this->getPluginId();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isApplicable($entityTypeId) {
     return $this->entityTypeManager->hasDefinition($entityTypeId);
   }

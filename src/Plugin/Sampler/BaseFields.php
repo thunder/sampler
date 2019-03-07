@@ -23,4 +23,11 @@ class BaseFields extends SamplerBase {
     return count($baseFields);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function key($entityTypeId) {
+    return $this->getPluginId();
+  }
+
 }
