@@ -61,7 +61,8 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
-   * Overrides the construction of sampler count plugins to inject some services.
+   * Overrides the construction of sampler count plugins to inject some
+   * services.
    *
    * @param array $configuration
    *   The plugin configuration, i.e. an array with configuration values keyed
@@ -76,14 +77,14 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
    *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
-   * @param \Drupal\Core\Database\Connection
+   * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
    *   The bundle information service.
    * @param \Drupal\user\PermissionHandlerInterface $permission_handler
    *   The permission handler service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, EntityTypeBundleInfoInterface $bundle_info, PermissionHandlerInterface $permission_handler) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, EntityTypeBundleInfoInterface $bundle_info, PermissionHandlerInterface $permission_handler) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entityTypeManager;

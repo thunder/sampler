@@ -38,6 +38,7 @@ interface SamplerInterface extends PluginInspectionInterface {
    *   The entity type ID.
    *
    * @return string
+   *   The key.
    */
   public function key(int $entityTypeId);
 
