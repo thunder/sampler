@@ -97,11 +97,11 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
       ->collect()
       ->getReport();
 
-    $histogramReport = $report['histogram'];
+    $histogramReport = $report['node']['histogram'];
 
-    $this->assertEquals($numberOfNodesWithOneRevisions, $histogramReport['node']['revision'][1]);
-    $this->assertEquals($numberOfNodesWithTwoRevisions, $histogramReport['node']['revision'][2]);
-    $this->assertEquals($numberOfNodesWithThreeRevisions, $histogramReport['node']['revision'][3]);
+    $this->assertEquals($numberOfNodesWithOneRevisions, $histogramReport['revision'][1]);
+    $this->assertEquals($numberOfNodesWithTwoRevisions, $histogramReport['revision'][2]);
+    $this->assertEquals($numberOfNodesWithThreeRevisions, $histogramReport['revision'][3]);
   }
 
 }
