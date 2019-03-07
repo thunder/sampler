@@ -34,7 +34,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->createUsersWithRole($taxonomyEditingRid1, $numberOfTaxonomyEditors1);
 
     $report = $this->container->get('sampler.reporter')
-      ->setAnonymize(FALSE)
+      ->anonymize(FALSE)
       ->collect()
       ->getReport();
 
@@ -64,7 +64,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->createNodesOfType($nodeTypeTwo, $numberOfNodesTypeTwo, 1);
 
     $report = $this->container->get('sampler.reporter')
-      ->setAnonymize(FALSE)
+      ->anonymize(FALSE)
       ->collect()
       ->getReport();
 
@@ -93,7 +93,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->createNodesOfType($nodeTypeOne, $numberOfNodesWithThreeRevisions, 3);
 
     $report = $this->container->get('sampler.reporter')
-      ->setAnonymize(FALSE)
+      ->anonymize(FALSE)
       ->collect()
       ->getReport();
 
