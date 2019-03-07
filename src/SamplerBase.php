@@ -12,7 +12,7 @@ use Drupal\user\PermissionHandlerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Base class for Histogram plugin plugins.
+ * Base class for sampler plugins.
  */
 abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginInterface, SamplerInterface {
 

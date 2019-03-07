@@ -92,7 +92,7 @@ class Reporter {
         if ($instance->isApplicable($entityTypeId)) {
           $instance->anonymize($this->anonymize);
           $collection = $instance->collect($entityTypeId);
-          if (is_array($collection)){
+          if (is_array($collection)) {
             if (!isset($this->report[$entityTypeId][$instance->key($entityTypeId)])) {
               $this->report[$entityTypeId][$instance->key($entityTypeId)] = [];
             }
