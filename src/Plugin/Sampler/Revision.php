@@ -18,14 +18,6 @@ class Revision extends HistogramBase {
   /**
    * {@inheritdoc}
    */
-  public function isApplicable($entityTypeId) {
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
-    return $entityTypeDefinition->isRevisionable();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function collect($entityTypeId) {
     $histogram = [];
 
@@ -50,6 +42,14 @@ class Revision extends HistogramBase {
 
     ksort($histogram);
     return [$this->getPluginId() => $histogram];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isApplicable($entityTypeId) {
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
+    return $entityTypeDefinition->isRevisionable();
   }
 
 }

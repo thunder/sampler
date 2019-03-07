@@ -46,4 +46,11 @@ class Paragraph extends HistogramBase {
     return [$this->getPluginId() => $histogram];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function isApplicable($entityTypeId) {
+    return parent::isApplicable($entityTypeId) && $this->entityTypeManager->hasDefinition('paragraph');
+  }
+
 }

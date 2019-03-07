@@ -32,6 +32,8 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *   The role id the users should have.
    * @param int $number
    *   The number of users to create.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createUsersWithRole(string $rid, int $number) {
     for ($i = 0; $i < $number; $i++) {
