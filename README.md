@@ -6,7 +6,7 @@ This module offers sampling of data for the Thunder performance project.
 Your project should be setup to use composer for installing required modules. Projects, that are differently setup are
 not supported.
 
-This module provides drush and drupal console commands only. If you do not already use either Drush or Drupal console,
+This module provides Drush and Drupal console commands only. If you do not already use either Drush or Drupal console,
 install one of them before continuing.
 
 See https://docs.drush.org/en/master/install/ and https://drupalconsole.com/docs for more information on how to install
@@ -23,7 +23,7 @@ Flush the caches and you are ready to go.
 
 ## Usage
 
-Do not use the commands on aproduction system! it might slow your system down.
+Do not use the commands on a production system! It might slow your system down.
 
 In your docroot call either:
 
