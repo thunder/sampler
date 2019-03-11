@@ -94,18 +94,14 @@ class Reporter {
         }
 
         $instance->anonymize($this->anonymize);
-        $collection = $instance->collect($entityTypeId);
 
-        if (is_array($collection)) {
-          if (isset($this->report[$entityTypeId][$instance->key($entityTypeId)])) {
-            $this->report[$entityTypeId][$instance->key($entityTypeId)] = array_merge($this->report[$entityTypeId][$instance->key($entityTypeId)], $collection);
-          }
-          else {
-            $this->report[$entityTypeId][$instance->key($entityTypeId)] = $collection;
-          }
+        $collection = $instance->collect($entityTypeId);
+        $collectionKey = $instance->key($entityTypeId);
+        if (is_array($collection) && isset($this->report[$entityTypeId][$collectionKey])) {
+          $this->report[$entityTypeId][$instance->key($entityTypeId)] = array_merge($this->report[$entityTypeId][$collectionKey], $collection);
         }
         else {
-          $this->report[$entityTypeId][$instance->key($entityTypeId)] = $collection;
+          $this->report[$entityTypeId][$collectionKey] = $collection;
         }
       }
     }
