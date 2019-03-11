@@ -10,15 +10,12 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 interface SamplerInterface extends PluginInspectionInterface {
 
   /**
-   * Sets the entity type to use.
-   *
-   * @param string $entityTypeId
-   *   The entity type ID.
+   * Checks if the current entity type id is supported by this plugin.
    *
    * @return bool
-   *   Returns true, if entity type is applicable for this plugin.
+   *   Supported or not.
    */
-  public function setEntityType(string $entityTypeId);
+  public function isApplicable();
 
   /**
    * Sample the data.
@@ -46,5 +43,13 @@ interface SamplerInterface extends PluginInspectionInterface {
    *   Anonymize or not.
    */
   public function anonymize(bool $anonymize);
+
+  /**
+   * Retrieve the entity type id.
+   *
+   * @return string
+   *   The entity type id.
+   */
+  public function entityTypeId();
 
 }

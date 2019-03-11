@@ -23,7 +23,7 @@ class Bundle extends SamplerBase {
    */
   public function collect() {
     $data = [];
-    $entityTypeId = $this->entityTypeId;
+    $entityTypeId = $this->entityTypeId();
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
 
     $baseTable = $entityTypeDefinition->getBaseTable();
@@ -53,7 +53,7 @@ class Bundle extends SamplerBase {
    * {@inheritdoc}
    */
   public function isApplicable() {
-    $entityTypeId = $this->entityTypeId;
+    $entityTypeId = $this->entityTypeId();
     return $this->entityTypeManager->hasDefinition($entityTypeId) && $this->bundleInfo->getBundleInfo($entityTypeId) && $entityTypeId !== 'user';
   }
 

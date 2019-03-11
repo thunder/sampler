@@ -28,7 +28,7 @@ class Paragraph extends SamplerBase {
       ->select($dataTable, 'r')
       ->fields('r', ['parent_type', 'parent_id']);
 
-    $query->condition('parent_type', $this->entityTypeId);
+    $query->condition('parent_type', $this->entityTypeId());
     $query->addExpression('count(id)', 'count');
     $query->groupBy('parent_id');
 

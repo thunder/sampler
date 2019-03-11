@@ -21,7 +21,7 @@ class Revision extends SamplerBase {
   public function collect() {
     $histogram = [];
 
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId);
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
     $revisionTable = $entityTypeDefinition->getRevisionTable();
 
     $idKey = $entityTypeDefinition->getKey('id');
@@ -48,7 +48,7 @@ class Revision extends SamplerBase {
    * {@inheritdoc}
    */
   public function isApplicable() {
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId);
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
     return $entityTypeDefinition->isRevisionable();
   }
 

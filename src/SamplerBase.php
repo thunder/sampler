@@ -17,13 +17,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginInterface, SamplerInterface {
 
   /**
-   * The entity type id.
-   *
-   * @var string
-   */
-  protected $entityTypeId;
-
-  /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -92,6 +85,10 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
    *   The permission handler service.
    */
   public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, EntityTypeBundleInfoInterface $bundle_info, PermissionHandlerInterface $permission_handler) {
+    if (!isset($configuration['entity_type_id'])) {
+      throw new \InvalidArgumentException("Missing 'entity_type_id' key in plugin configuration.");
+    }
+
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entityTypeManager;
@@ -120,20 +117,8 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public function setEntityType(string $entityTypeId) {
-    $this->entityTypeId = $entityTypeId;
-
-    return $this->isApplicable();
-  }
-
-  /**
-   * Checks if the current entity type id is supported by this plugin.
-   *
-   * @return bool
-   *   Supported or not.
-   */
-  protected function isApplicable() {
-    return $this->entityTypeManager->hasDefinition($this->entityTypeId);
+  public function isApplicable() {
+    return $this->entityTypeManager->hasDefinition($this->entityTypeId());
   }
 
   /**
@@ -141,6 +126,13 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
    */
   public function anonymize(bool $anonymize) {
     $this->anonymize = $anonymize;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityTypeId() {
+    return $this->configuration['entity_type_id'];
   }
 
 }

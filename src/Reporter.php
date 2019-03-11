@@ -80,8 +80,8 @@ class Reporter {
 
       foreach ($this->samplerPluginManager->getDefinitions() as $definition) {
         /** @var \Drupal\sampler\SamplerInterface $instance */
-        $instance = $this->samplerPluginManager->createInstance($definition['id']);
-        if (!$instance->setEntityType($entityTypeId)) {
+        $instance = $this->samplerPluginManager->createInstance($definition['id'], ['entity_type_id' => $entityTypeId]);
+        if (!$instance->isApplicable()) {
           continue;
         }
 

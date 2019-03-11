@@ -30,7 +30,7 @@ class User extends SamplerBase {
     $taxonomyEditingRoles = $this->getEditorRoles('taxonomy');
 
     foreach ($roles as $role) {
-      $mapping = $this->getGroupMapping($this->entityTypeId, $role);
+      $mapping = $this->getGroupMapping($this->entityTypeId(), $role);
 
       $query = $this->connection->select('user__roles', 'b');
       $query->condition('roles_target_id', $role);
@@ -71,7 +71,7 @@ class User extends SamplerBase {
    * {@inheritdoc}
    */
   public function isApplicable() {
-    return $this->entityTypeId === 'user';
+    return $this->entityTypeId() === 'user';
   }
 
   /**
