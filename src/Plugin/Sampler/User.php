@@ -66,7 +66,7 @@ class User extends SamplerBase {
     }
 
     $roleNames = array_map(
-      function($role) {
+      function ($role) {
         return $this->getGroupMapping($this->entityTypeId(), $role);
       },
       array_keys($roles)
