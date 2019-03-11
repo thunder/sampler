@@ -2,7 +2,6 @@
 
 namespace Drupal\sampler\Traits;
 
-
 /**
  * Provides methods for handling of grouped data.
  */
