@@ -33,13 +33,6 @@ class Reporter {
   protected $bundledEntityTypes = [];
 
   /**
-   * Mapping of group names to integer values.
-   *
-   * @var string[]
-   */
-  protected $groupMapping = [];
-
-  /**
    * The group count manager service.
    *
    * @var \Drupal\sampler\SamplerPluginManager
@@ -51,7 +44,7 @@ class Reporter {
    *
    * @var bool
    */
-  protected $anonymize;
+  protected $anonymize = TRUE;
 
   /**
    * Reporter constructor.
@@ -72,7 +65,6 @@ class Reporter {
     }
 
     $this->bundledEntityTypes[] = 'user';
-    $this->anonymize(TRUE);
   }
 
   /**

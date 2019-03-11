@@ -8,6 +8,13 @@ namespace Drupal\sampler\Traits;
 trait GroupedDataTrait {
 
   /**
+   * Mapping of group names to integer values.
+   *
+   * @var string[]
+   */
+  protected $groupMapping = [];
+
+  /**
    * Map group names to an integer value.
    *
    * The mapped integer will be used in output instead of the group name.

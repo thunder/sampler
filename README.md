@@ -3,13 +3,13 @@
 This module offers sampling of data for the Thunder performance project.
 
 ## Prerequisites
-Your project should be setup to use composer for installing required modules. Projects, that are differnetly setup are
+Your project should be setup to use composer for installing required modules. Projects, that are differently setup are
 not supported.
 
-This module provides drush and drupal console commands only. If you do not already use either drush or drupal console,
+This module provides drush and drupal console commands only. If you do not already use either Drush or Drupal console,
 install one of them before continuing.
 
-See https://docs.drush.org/en/master/install/ and https://drupalconsole.com/docs for more informations on how to install
+See https://docs.drush.org/en/master/install/ and https://drupalconsole.com/docs for more information on how to install
 them.
 
 ## Installation
