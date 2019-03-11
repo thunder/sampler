@@ -50,7 +50,7 @@ class Paragraph extends SamplerBase {
    * {@inheritdoc}
    */
   public function isApplicable() {
-    return parent::isApplicable($this->entityTypeId) && $this->entityTypeManager->hasDefinition('paragraph');
+    return parent::isApplicable() && $this->entityTypeManager->hasDefinition('paragraph');
   }
 
   /**
