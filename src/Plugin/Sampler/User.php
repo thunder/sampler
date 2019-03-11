@@ -21,7 +21,7 @@ class User extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function collect($entityTypeId) {
+  public function collect() {
     $data = [];
 
     $roles = array_keys(user_roles(TRUE));
@@ -30,7 +30,7 @@ class User extends SamplerBase {
     $taxonomyEditingRoles = $this->getEditorRoles('taxonomy');
 
     foreach ($roles as $role) {
-      $mapping = $this->getGroupMapping($entityTypeId, $role);
+      $mapping = $this->getGroupMapping($this->entityTypeId, $role);
 
       $query = $this->connection->select('user__roles', 'b');
       $query->condition('roles_target_id', $role);
@@ -70,14 +70,14 @@ class User extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function isApplicable($entityTypeId) {
-    return $entityTypeId === 'user';
+  public function isApplicable() {
+    return $this->entityTypeId === 'user';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function key($entityTypeId): string {
+  public function key() {
     return 'role';
   }
 

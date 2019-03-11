@@ -18,7 +18,7 @@ class Paragraph extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function collect($entityTypeId) {
+  public function collect() {
     $histogram = [];
 
     $entityTypeDefinition = $this->entityTypeManager->getDefinition('paragraph');
@@ -28,7 +28,7 @@ class Paragraph extends SamplerBase {
       ->select($dataTable, 'r')
       ->fields('r', ['parent_type', 'parent_id']);
 
-    $query->condition('parent_type', $entityTypeId);
+    $query->condition('parent_type', $this->entityTypeId);
     $query->addExpression('count(id)', 'count');
     $query->groupBy('parent_id');
 
@@ -49,14 +49,14 @@ class Paragraph extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function isApplicable($entityTypeId) {
-    return parent::isApplicable($entityTypeId) && $this->entityTypeManager->hasDefinition('paragraph');
+  public function isApplicable() {
+    return parent::isApplicable($this->entityTypeId) && $this->entityTypeManager->hasDefinition('paragraph');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function key($entityTypeId) {
+  public function key() {
     return 'histogram';
   }
 

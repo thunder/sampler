@@ -17,6 +17,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginInterface, SamplerInterface {
 
   /**
+   * The entity type id.
+   *
+   * @var string
+   */
+  protected $entityTypeId;
+
+  /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -113,8 +120,20 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public function isApplicable($entityTypeId) {
-    return $this->entityTypeManager->hasDefinition($entityTypeId);
+  public function setEntityType(string $entityTypeId) {
+    $this->entityTypeId = $entityTypeId;
+
+    return $this->isApplicable();
+  }
+
+  /**
+   * Checks if the current entity type id is supported by this plugin.
+   *
+   * @return bool
+   *   Supported or not.
+   */
+  protected function isApplicable() {
+    return $this->entityTypeManager->hasDefinition($this->entityTypeId);
   }
 
   /**

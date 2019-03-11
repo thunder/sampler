@@ -89,16 +89,16 @@ class Reporter {
       foreach ($this->samplerPluginManager->getDefinitions() as $definition) {
         /** @var \Drupal\sampler\SamplerInterface $instance */
         $instance = $this->samplerPluginManager->createInstance($definition['id']);
-        if (!$instance->isApplicable($entityTypeId)) {
+        if (!$instance->setEntityType($entityTypeId)) {
           continue;
         }
 
         $instance->anonymize($this->anonymize);
 
-        $collection = $instance->collect($entityTypeId);
-        $collectionKey = $instance->key($entityTypeId);
+        $collection = $instance->collect();
+        $collectionKey = $instance->key();
         if (is_array($collection) && isset($this->report[$entityTypeId][$collectionKey])) {
-          $this->report[$entityTypeId][$instance->key($entityTypeId)] = array_merge($this->report[$entityTypeId][$collectionKey], $collection);
+          $this->report[$entityTypeId][$collectionKey] = array_merge($this->report[$entityTypeId][$collectionKey], $collection);
         }
         else {
           $this->report[$entityTypeId][$collectionKey] = $collection;

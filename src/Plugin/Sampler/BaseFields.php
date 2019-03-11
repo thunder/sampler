@@ -18,15 +18,15 @@ class BaseFields extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function collect($entityTypeId) {
-    $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId));
+  public function collect() {
+    $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId));
     return count($baseFields);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function key($entityTypeId) {
+  public function key() {
     return $this->getPluginId();
   }
 

@@ -5,42 +5,36 @@ namespace Drupal\sampler;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
- * Defines an interface for Histogram plugins.
+ * Defines an interface for Sampler plugins.
  */
 interface SamplerInterface extends PluginInspectionInterface {
 
   /**
-   * Checks if the current entity type id is supported by this plugin.
+   * Sets the entity type to use.
    *
-   * @param int $entityTypeId
+   * @param string $entityTypeId
    *   The entity type ID.
    *
    * @return bool
-   *   Supported or not.
+   *   Returns true, if entity type is applicable for this plugin.
    */
-  public function isApplicable($entityTypeId);
+  public function setEntityType(string $entityTypeId);
 
   /**
-   * Build histogram for the provided entity type ID.
-   *
-   * @param int $entityTypeId
-   *   The entity type ID.
+   * Sample the data.
    *
    * @return array
    *   The histogram array.
    */
-  public function collect($entityTypeId);
+  public function collect();
 
   /**
    * The key of the data in the result.
    *
-   * @param int $entityTypeId
-   *   The entity type ID.
-   *
    * @return string
    *   The key.
    */
-  public function key(int $entityTypeId);
+  public function key();
 
   /**
    * Set anonymize flag.
