@@ -38,6 +38,7 @@ class User extends SamplerBase {
 
       $data[$mapping]['is_node_editing'] = in_array($mapping, $nodeEditingRoles);
       $data[$mapping]['is_taxonomy_editing'] = in_array($mapping, $taxonomyEditingRoles);
+
     }
 
     return $data;
@@ -64,7 +65,14 @@ class User extends SamplerBase {
       $roles += user_roles(TRUE, $permissionName);
     }
 
-    return array_keys($roles);
+    $roleNames = array_map(
+      function($role) {
+        return $this->getGroupMapping($this->entityTypeId(), $role);
+      },
+      array_keys($roles)
+    );
+
+    return $roleNames;
   }
 
   /**
