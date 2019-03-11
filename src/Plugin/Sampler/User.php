@@ -78,7 +78,7 @@ class User extends SamplerBase {
    * {@inheritdoc}
    */
   public function key($entityTypeId): string {
-    return $this->getPluginId();
+    return 'role';
   }
 
 }

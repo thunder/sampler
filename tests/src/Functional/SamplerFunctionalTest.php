@@ -46,24 +46,24 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertEquals(17, $userReport['base_fields']);
 
     // Test if the report contains the correct number of users per role.
-    $this->assertEquals($numberOfRestricted, $userReport['roles'][$nonEditingRid]['instances']);
-    $this->assertEquals($numberOfNodeEditors, $userReport['roles'][$nodeEditingRid]['instances']);
-    $this->assertEquals($numberOfTaxonomyEditors, $userReport['roles'][$taxonomyEditingRid]['instances']);
-    $this->assertEquals($numberOfAllEditors, $userReport['roles'][$allEditingRid]['instances']);
+    $this->assertEquals($numberOfRestricted, $userReport['role'][$nonEditingRid]['instances']);
+    $this->assertEquals($numberOfNodeEditors, $userReport['role'][$nodeEditingRid]['instances']);
+    $this->assertEquals($numberOfTaxonomyEditors, $userReport['role'][$taxonomyEditingRid]['instances']);
+    $this->assertEquals($numberOfAllEditors, $userReport['role'][$allEditingRid]['instances']);
 
     // Test if the report correctly determines, if roles are allow to edit nodes
     // and terms.
-    $this->assertEquals(FALSE, $userReport['roles'][$nonEditingRid]['is_node_editing']);
-    $this->assertEquals(FALSE, $userReport['roles'][$nonEditingRid]['is_taxonomy_editing']);
+    $this->assertEquals(FALSE, $userReport['role'][$nonEditingRid]['is_node_editing']);
+    $this->assertEquals(FALSE, $userReport['role'][$nonEditingRid]['is_taxonomy_editing']);
 
-    $this->assertEquals(TRUE, $userReport['roles'][$nodeEditingRid]['is_node_editing']);
-    $this->assertEquals(FALSE, $userReport['roles'][$nodeEditingRid]['is_taxonomy_editing']);
+    $this->assertEquals(TRUE, $userReport['role'][$nodeEditingRid]['is_node_editing']);
+    $this->assertEquals(FALSE, $userReport['role'][$nodeEditingRid]['is_taxonomy_editing']);
 
-    $this->assertEquals(FALSE, $userReport['roles'][$taxonomyEditingRid]['is_node_editing']);
-    $this->assertEquals(TRUE, $userReport['roles'][$taxonomyEditingRid]['is_taxonomy_editing']);
+    $this->assertEquals(FALSE, $userReport['role'][$taxonomyEditingRid]['is_node_editing']);
+    $this->assertEquals(TRUE, $userReport['role'][$taxonomyEditingRid]['is_taxonomy_editing']);
 
-    $this->assertEquals(TRUE, $userReport['roles'][$allEditingRid]['is_node_editing']);
-    $this->assertEquals(TRUE, $userReport['roles'][$allEditingRid]['is_taxonomy_editing']);
+    $this->assertEquals(TRUE, $userReport['role'][$allEditingRid]['is_node_editing']);
+    $this->assertEquals(TRUE, $userReport['role'][$allEditingRid]['is_taxonomy_editing']);
   }
 
   /**
@@ -87,11 +87,11 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $nodeReport = $report['node'];
 
     $this->assertEquals(18, $nodeReport['base_fields']);
-    $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundles'][$nodeTypeOne]['instances']);
-    $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundles'][$nodeTypeTwo]['instances']);
+    $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
+    $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
-    $this->assertEquals(2, $nodeReport['bundles'][$nodeTypeOne]['fields']);
-    $this->assertEquals(0, $nodeReport['bundles'][$nodeTypeTwo]['fields']);
+    $this->assertEquals(2, $nodeReport['bundle'][$nodeTypeOne]['fields']);
+    $this->assertEquals(0, $nodeReport['bundle'][$nodeTypeTwo]['fields']);
   }
 
   /**
