@@ -10,7 +10,8 @@ use Drupal\sampler\SamplerBase;
  * @Sampler(
  *   id = "revision",
  *   label = @Translation("Revision"),
- *   description = @Translation("Builds histogram for revisions.")
+ *   description = @Translation("Builds histogram for revisions."),
+ *   deriver = "\Drupal\sampler\Plugin\Derivative\RevisionDeriver"
  * )
  */
 class Revision extends SamplerBase {
@@ -41,15 +42,7 @@ class Revision extends SamplerBase {
     }
 
     ksort($histogram);
-    return [$this->getPluginId() => $histogram];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isApplicable() {
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
-    return $entityTypeDefinition->isRevisionable();
+    return [$this->getBaseId() => $histogram];
   }
 
   /**

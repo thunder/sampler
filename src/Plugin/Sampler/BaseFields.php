@@ -10,7 +10,8 @@ use Drupal\sampler\SamplerBase;
  * @Sampler(
  *   id = "base_fields",
  *   label = @Translation("Base fields"),
- *   description = @Translation("Collects base field count.")
+ *   description = @Translation("Collects base field count."),
+ *   deriver = "\Drupal\sampler\Plugin\Derivative\BaseFieldDeriver"
  * )
  */
 class BaseFields extends SamplerBase {
@@ -26,8 +27,8 @@ class BaseFields extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function key() {
-    return $this->getPluginId();
+  public function key(): string {
+    return $this->getBaseId();
   }
 
 }

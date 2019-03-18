@@ -11,7 +11,8 @@ use Drupal\sampler\Traits\GroupedDataTrait;
  * @Sampler(
  *   id = "user",
  *   label = @Translation("User"),
- *   description = @Translation("Collects user data.")
+ *   description = @Translation("Collects user data."),
+ *   entity_type_id = "user"
  * )
  */
 class User extends SamplerBase {
@@ -73,13 +74,6 @@ class User extends SamplerBase {
     );
 
     return $roleNames;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isApplicable() {
-    return $this->entityTypeId() === 'user';
   }
 
   /**

@@ -10,7 +10,8 @@ use Drupal\sampler\SamplerBase;
  * @Sampler(
  *   id = "paragraph",
  *   label = @Translation("Paragraph"),
- *   description = @Translation("Builds histogram for paragraphs.")
+ *   description = @Translation("Builds histogram for paragraphs."),
+ *   deriver = "\Drupal\sampler\Plugin\Derivative\ParagraphDeriver"
  * )
  */
 class Paragraph extends SamplerBase {
@@ -43,14 +44,7 @@ class Paragraph extends SamplerBase {
 
     ksort($histogram);
 
-    return [$this->getPluginId() => $histogram];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isApplicable() {
-    return parent::isApplicable() && $this->entityTypeManager->hasDefinition('paragraph');
+    return [$this->getBaseId() => $histogram];
   }
 
   /**

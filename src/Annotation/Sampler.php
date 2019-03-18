@@ -31,4 +31,11 @@ class Sampler extends Plugin {
    */
   public $label;
 
+  /**
+   * The entity type ID.
+   *
+   * @var string
+   */
+  public $entity_type_id;
+
 }

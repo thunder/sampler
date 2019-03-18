@@ -10,14 +10,6 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 interface SamplerInterface extends PluginInspectionInterface {
 
   /**
-   * Checks if the current entity type id is supported by this plugin.
-   *
-   * @return bool
-   *   Supported or not.
-   */
-  public function isApplicable();
-
-  /**
    * Sample the data.
    *
    * @return array

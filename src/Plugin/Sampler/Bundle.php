@@ -11,7 +11,8 @@ use Drupal\sampler\Traits\GroupedDataTrait;
  * @Sampler(
  *   id = "bundle",
  *   label = @Translation("Bundle"),
- *   description = @Translation("Collects bundle data.")
+ *   description = @Translation("Collects bundle data."),
+ *   deriver = "\Drupal\sampler\Plugin\Derivative\BundleDeriver"
  * )
  */
 class Bundle extends SamplerBase {
@@ -52,16 +53,8 @@ class Bundle extends SamplerBase {
   /**
    * {@inheritdoc}
    */
-  public function isApplicable() {
-    $entityTypeId = $this->entityTypeId();
-    return $this->entityTypeManager->hasDefinition($entityTypeId) && $this->bundleInfo->getBundleInfo($entityTypeId) && $entityTypeId !== 'user';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function key(): string {
-    return $this->getPluginId();
+    return $this->getBaseId();
   }
 
 }
