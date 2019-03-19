@@ -2,12 +2,29 @@
 
 namespace Drupal\Tests\sampler\Functional;
 
+use Drupal\file\Entity\File;
+use Drupal\Tests\TestFileCreationTrait;
+
 /**
  * Tests the sampler module.
  *
  * @group sampler
  */
 class SamplerFunctionalTest extends SamplerFunctionalTestBase {
+  use TestFileCreationTrait;
+
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  protected static $modules = [
+    // Enable contact as it provides a fieldable entity with no storage.
+    'contact',
+    // Enbable file as it provides a fieldable entity with SQL storage but no
+    // bundles.
+    'file',
+  ];
 
   /**
    * Test sampling of user data.
@@ -92,6 +109,29 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $this->assertEquals(2, $nodeReport['bundle'][$nodeTypeOne]['fields']);
     $this->assertEquals(0, $nodeReport['bundle'][$nodeTypeTwo]['fields']);
+  }
+
+  /**
+   * Test sampling of node data.
+   */
+  public function testFileDataSampling() {
+    // Create test file.
+    $this->generateFile('test', 64, 10, 'text');
+    $file = File::create([
+      'uri' => 'public://test.txt',
+      'filename' => 'test.txt',
+    ]);
+    $file->setPermanent();
+    $file->save();
+
+    $report = $this->container->get('sampler.reporter')
+      ->anonymize(FALSE)
+      ->collect()
+      ->getReport();
+
+    $fileReport = $report['file'];
+
+    $this->assertEquals(11, $fileReport['base_fields']);
   }
 
   /**

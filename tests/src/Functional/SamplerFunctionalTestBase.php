@@ -16,7 +16,7 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'field',
     'media',
