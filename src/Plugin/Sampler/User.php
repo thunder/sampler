@@ -99,7 +99,6 @@ class User extends SamplerBase {
     }
 
     // @todo user configurable field count?
-
     return $data;
   }
 
