@@ -132,6 +132,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $fileReport = $report['file'];
 
     $this->assertEquals(11, $fileReport['base_fields']);
+    // @todo Add a file count.
   }
 
   /**
