@@ -36,6 +36,8 @@ class Sampler extends Plugin {
    *
    * @var string
    */
+  // phpcs:disable
   public $entity_type_id;
+  // phpcs:enable
 
 }
