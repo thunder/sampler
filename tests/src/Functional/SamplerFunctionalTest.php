@@ -125,7 +125,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $file->save();
 
     $report = $this->container->get('sampler.reporter')
-      ->anonymize(FALSE)
+      ->anonymize(TRUE)
       ->collect()
       ->getReport();
 
@@ -150,7 +150,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->createNodesOfType($nodeTypeOne, $numberOfNodesWithThreeRevisions, 3);
 
     $report = $this->container->get('sampler.reporter')
-      ->anonymize(FALSE)
+      ->anonymize(TRUE)
       ->collect()
       ->getReport();
 
