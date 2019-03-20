@@ -130,10 +130,10 @@ class Bundle extends SamplerBase {
         continue;
       }
 
-      $data[$mapping]['fields'] = [];
+      $data[$mapping]['fields'] = ['count' => count($fields)];
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
-      foreach ($fields as $fieldConfig){
+      foreach ($fields as $fieldConfig) {
         $fieldType = $fieldConfig->getType();
 
         if (!isset($data[$mapping]['fields'][$fieldType])) {
