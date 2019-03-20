@@ -2,52 +2,85 @@
 
 namespace Drupal\Tests\sampler\Functional;
 
+use Drupal\file\Entity\File;
+use Drupal\Tests\TestFileCreationTrait;
+
 /**
  * Tests the sampler module.
  *
  * @group sampler
  */
 class SamplerFunctionalTest extends SamplerFunctionalTestBase {
+  use TestFileCreationTrait;
+
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  protected static $modules = [
+    // Enable contact as it provides a fieldable entity with no storage.
+    'contact',
+    // Enbable file as it provides a fieldable entity with SQL storage but no
+    // bundles.
+    'file',
+  ];
 
   /**
    * Test sampling of user data.
    */
   public function testUserDataSampling() {
     $nonEditingRid = 'restricted';
-    $nodeEditingRid1 = 'node_editor_1';
-    $nodeEditingRid2 = 'node_editor_2';
-    $taxonomyEditingRid1 = 'term_editor_1';
+    $nodeEditingRid = 'node_editor';
+    $taxonomyEditingRid = 'term_editor';
+    $allEditingRid = 'all_editor';
 
     $numberOfRestricted = 1;
-    $numberOfNodeEditors1 = 2;
-    $numberOfNodeEditors2 = 3;
-    $numberOfTaxonomyEditors1 = 4;
+    $numberOfNodeEditors = 2;
+    $numberOfTaxonomyEditors = 3;
+    $numberOfAllEditors = 4;
 
+    // Create multiple roles with different editing capabilities.
     $this->createRole([], $nonEditingRid);
-    $this->createRole(['create type_one content'], $nodeEditingRid1);
-    $this->createRole(['create type_two content'], $nodeEditingRid2);
-    $this->createRole(['edit terms in vocabulary_one'], $taxonomyEditingRid1);
+    $this->createRole(['create type_one content'], $nodeEditingRid);
+    $this->createRole(['edit terms in vocabulary_one'], $taxonomyEditingRid);
+    $this->createRole(['create type_two content', 'edit terms in vocabulary_one'], $allEditingRid);
 
+    // Foreach role create a defined number of users.
     $this->createUsersWithRole($nonEditingRid, $numberOfRestricted);
-    $this->createUsersWithRole($nodeEditingRid1, $numberOfNodeEditors1);
-    $this->createUsersWithRole($nodeEditingRid2, $numberOfNodeEditors2);
-    $this->createUsersWithRole($taxonomyEditingRid1, $numberOfTaxonomyEditors1);
+    $this->createUsersWithRole($nodeEditingRid, $numberOfNodeEditors);
+    $this->createUsersWithRole($taxonomyEditingRid, $numberOfTaxonomyEditors);
+    $this->createUsersWithRole($allEditingRid, $numberOfAllEditors);
 
+    // Get the report.
     $report = $this->container->get('sampler.reporter')
-      ->setAnonymize(FALSE)
+      ->anonymize(FALSE)
       ->collect()
       ->getReport();
 
     $userReport = $report['user'];
 
     $this->assertEquals(17, $userReport['base_fields']);
-    $this->assertEquals($numberOfRestricted, $userReport['roles'][$nonEditingRid]['instances']);
-    $this->assertEquals($numberOfNodeEditors1, $userReport['roles'][$nodeEditingRid1]['instances']);
-    $this->assertEquals($numberOfNodeEditors2, $userReport['roles'][$nodeEditingRid2]['instances']);
-    $this->assertEquals($numberOfTaxonomyEditors1, $userReport['roles'][$taxonomyEditingRid1]['instances']);
 
-    $this->assertEquals(($numberOfNodeEditors1 + $numberOfNodeEditors2), $userReport['editing_users']['node']['instances']);
-    $this->assertEquals($numberOfTaxonomyEditors1, $userReport['editing_users']['taxonomy']['instances']);
+    // Test if the report contains the correct number of users per role.
+    $this->assertEquals($numberOfRestricted, $userReport['role'][$nonEditingRid]['instances']);
+    $this->assertEquals($numberOfNodeEditors, $userReport['role'][$nodeEditingRid]['instances']);
+    $this->assertEquals($numberOfTaxonomyEditors, $userReport['role'][$taxonomyEditingRid]['instances']);
+    $this->assertEquals($numberOfAllEditors, $userReport['role'][$allEditingRid]['instances']);
+
+    // Test if the report correctly determines, if roles are allow to edit nodes
+    // and terms.
+    $this->assertEquals(FALSE, $userReport['role'][$nonEditingRid]['is_node_editing']);
+    $this->assertEquals(FALSE, $userReport['role'][$nonEditingRid]['is_taxonomy_editing']);
+
+    $this->assertEquals(TRUE, $userReport['role'][$nodeEditingRid]['is_node_editing']);
+    $this->assertEquals(FALSE, $userReport['role'][$nodeEditingRid]['is_taxonomy_editing']);
+
+    $this->assertEquals(FALSE, $userReport['role'][$taxonomyEditingRid]['is_node_editing']);
+    $this->assertEquals(TRUE, $userReport['role'][$taxonomyEditingRid]['is_taxonomy_editing']);
+
+    $this->assertEquals(TRUE, $userReport['role'][$allEditingRid]['is_node_editing']);
+    $this->assertEquals(TRUE, $userReport['role'][$allEditingRid]['is_taxonomy_editing']);
   }
 
   /**
@@ -64,18 +97,42 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->createNodesOfType($nodeTypeTwo, $numberOfNodesTypeTwo, 1);
 
     $report = $this->container->get('sampler.reporter')
-      ->setAnonymize(FALSE)
+      ->anonymize(FALSE)
       ->collect()
       ->getReport();
 
     $nodeReport = $report['node'];
 
     $this->assertEquals(18, $nodeReport['base_fields']);
-    $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundles'][$nodeTypeOne]['instances']);
-    $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundles'][$nodeTypeTwo]['instances']);
+    $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
+    $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
-    $this->assertEquals(2, $nodeReport['bundles'][$nodeTypeOne]['fields']);
-    $this->assertEquals(0, $nodeReport['bundles'][$nodeTypeTwo]['fields']);
+    $this->assertEquals(2, $nodeReport['bundle'][$nodeTypeOne]['fields']);
+    $this->assertEquals(0, $nodeReport['bundle'][$nodeTypeTwo]['fields']);
+  }
+
+  /**
+   * Test sampling of node data.
+   */
+  public function testFileDataSampling() {
+    // Create test file.
+    $this->generateFile('test', 64, 10, 'text');
+    $file = File::create([
+      'uri' => 'public://test.txt',
+      'filename' => 'test.txt',
+    ]);
+    $file->setPermanent();
+    $file->save();
+
+    $report = $this->container->get('sampler.reporter')
+      ->anonymize(TRUE)
+      ->collect()
+      ->getReport();
+
+    $fileReport = $report['file'];
+
+    $this->assertEquals(11, $fileReport['base_fields']);
+    // @todo Add a file count.
   }
 
   /**
@@ -93,15 +150,15 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->createNodesOfType($nodeTypeOne, $numberOfNodesWithThreeRevisions, 3);
 
     $report = $this->container->get('sampler.reporter')
-      ->setAnonymize(FALSE)
+      ->anonymize(TRUE)
       ->collect()
       ->getReport();
 
-    $histogramReport = $report['histogram'];
+    $histogramReport = $report['node']['histogram'];
 
-    $this->assertEquals($numberOfNodesWithOneRevisions, $histogramReport['node']['revision'][1]);
-    $this->assertEquals($numberOfNodesWithTwoRevisions, $histogramReport['node']['revision'][2]);
-    $this->assertEquals($numberOfNodesWithThreeRevisions, $histogramReport['node']['revision'][3]);
+    $this->assertEquals($numberOfNodesWithOneRevisions, $histogramReport['revision'][1]);
+    $this->assertEquals($numberOfNodesWithTwoRevisions, $histogramReport['revision'][2]);
+    $this->assertEquals($numberOfNodesWithThreeRevisions, $histogramReport['revision'][3]);
   }
 
 }

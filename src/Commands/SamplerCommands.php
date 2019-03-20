@@ -41,7 +41,7 @@ class SamplerCommands extends DrushCommands {
    * @option file If a file is given, the report will be written into that file. Otherwise, the report will be printed to screen.
    * @option anonymize Option to anonymize the output. I.e. show actual bundle names or replace them with generic names. The given value will be converted to boolean.
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    *
    * @command sampler:report
    */
@@ -56,7 +56,7 @@ class SamplerCommands extends DrushCommands {
     }
 
     $this->reporter
-      ->setAnonymize($anonymize)
+      ->anonymize($anonymize)
       ->collect()
       ->output($options['file']);
   }

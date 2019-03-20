@@ -55,7 +55,7 @@ class ReportCommand extends ContainerAwareCommand {
     $anonymize = $input->getOption('anonymize');
 
     $this->reporter
-      ->setAnonymize($anonymize)
+      ->anonymize($anonymize)
       ->collect()
       ->output($file);
   }

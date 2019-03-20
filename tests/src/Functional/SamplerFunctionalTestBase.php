@@ -16,7 +16,7 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'field',
     'media',
@@ -32,6 +32,8 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *   The role id the users should have.
    * @param int $number
    *   The number of users to create.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createUsersWithRole(string $rid, int $number) {
     for ($i = 0; $i < $number; $i++) {
@@ -56,6 +58,8 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *   The number of nodes to create.
    * @param int $numberOfRevisions
    *   The number of additional revisions to create for each node.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createNodesOfType(string $type, int $numberOfNodes, int $numberOfRevisions) {
     for ($i = 0; $i < $numberOfNodes; $i++) {
