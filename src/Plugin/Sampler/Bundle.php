@@ -6,6 +6,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\field\FieldConfigInterface;
 use Drupal\sampler\SamplerBase;
 use Drupal\sampler\Traits\GroupedDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -128,16 +129,41 @@ class Bundle extends SamplerBase {
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
-        $fieldType = $fieldConfig->getType();
-
-        if (!isset($data[$mapping]['fields'][$fieldType])) {
-          $data[$mapping]['fields'][$fieldType] = 1;
+        if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])){
+          $data = $this->collectEntityReferenceData($data, $mapping, $fieldConfig);
           continue;
         }
 
-        $data[$mapping]['fields'][$fieldConfig->getType()]++;
+        $data = $this->collectDefaultFieldData($data, $mapping, $fieldConfig);
       }
     }
+
+    return $data;
+  }
+
+  protected function collectEntityReferenceData(array $data, string $mapping, FieldConfigInterface $fieldConfig) {
+    $fieldType = $fieldConfig->getType();
+    $targetEntityTypeId = $fieldConfig->getSetting('target_type');
+
+    if (empty($data[$mapping]['fields'][$fieldType][$targetEntityTypeId])) {
+      $data[$mapping]['fields'][$fieldType] = [$targetEntityTypeId => 1];
+      return $data;
+    }
+
+    $data[$mapping]['fields'][$fieldType][$targetEntityTypeId]++;
+
+    return $data;
+  }
+
+  protected function collectDefaultFieldData($data, $mapping, $fieldConfig) {
+    $fieldType = $fieldConfig->getType();
+
+    if (empty($data[$mapping]['fields'][$fieldType])) {
+      $data[$mapping]['fields'][$fieldType] = 1;
+      return $data;
+    }
+
+    $data[$mapping]['fields'][$fieldType]++;
 
     return $data;
   }
