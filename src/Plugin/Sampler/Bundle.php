@@ -115,7 +115,7 @@ class Bundle extends SamplerBase {
 
     foreach ($bundles as $bundle) {
       $mapping = $this->getGroupMapping($entityTypeId, $bundle);
-      $data[$mapping] = [];
+      $data[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
       $query->condition($bundleField, $bundle);
@@ -125,12 +125,6 @@ class Bundle extends SamplerBase {
         $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
         $baseFields
       );
-
-      if (empty($fields)) {
-        continue;
-      }
-
-      $data[$mapping]['fields'] = ['count' => count($fields)];
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
