@@ -113,6 +113,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
     $this->assertEquals(2, $nodeReport['bundle'][$nodeTypeOne]['fields']['string']);
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference']['node']);
     $this->assertEmpty($nodeReport['bundle'][$nodeTypeTwo]['fields']);
   }
 
