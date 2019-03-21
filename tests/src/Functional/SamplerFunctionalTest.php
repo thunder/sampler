@@ -150,7 +150,8 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
       ->getReport();
 
     $mediaReport = $report['media'];
-    $this->assertEquals('test', $mediaReport['bundle']['test']);
+
+    $this->assertEquals('test', $mediaReport['bundle']['test']['source']);
   }
 
   /**
