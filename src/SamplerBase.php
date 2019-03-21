@@ -18,6 +18,13 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   protected $anonymize;
 
   /**
+   * The collected data.
+   *
+   * @var array
+   */
+  protected $collectedData = [];
+
+  /**
    * {@inheritdoc}
    */
   public function anonymize(bool $anonymize) {

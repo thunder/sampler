@@ -104,7 +104,6 @@ class Bundle extends SamplerBase {
    * {@inheritdoc}
    */
   public function collect() {
-    $data = [];
     $entityTypeId = $this->entityTypeId();
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
 
@@ -116,11 +115,11 @@ class Bundle extends SamplerBase {
 
     foreach ($bundles as $bundle) {
       $mapping = $this->getGroupMapping($entityTypeId, $bundle);
-      $data[$mapping] = ['fields' => []];
+      $this->collectedData[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
       $query->condition($bundleField, $bundle);
-      $data[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
+      $this->collectedData[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
       $fields = array_diff_key(
         $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
@@ -130,42 +129,38 @@ class Bundle extends SamplerBase {
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
         if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])){
-          $data = $this->collectEntityReferenceData($data, $mapping, $fieldConfig);
+          $this->collectEntityReferenceData($fieldConfig, $mapping);
           continue;
         }
 
-        $data = $this->collectDefaultFieldData($data, $mapping, $fieldConfig);
+        $this->collectDefaultFieldData($fieldConfig, $mapping);
       }
     }
 
-    return $data;
+    return $this->collectedData;
   }
 
-  protected function collectEntityReferenceData(array $data, string $mapping, FieldConfigInterface $fieldConfig) {
+  protected function collectEntityReferenceData(FieldConfigInterface $fieldConfig, string $mapping) {
     $fieldType = $fieldConfig->getType();
     $targetEntityTypeId = $fieldConfig->getSetting('target_type');
 
-    if (empty($data[$mapping]['fields'][$fieldType][$targetEntityTypeId])) {
-      $data[$mapping]['fields'][$fieldType] = [$targetEntityTypeId => 1];
-      return $data;
+    if (empty($this->collectedData[$mapping]['fields'][$fieldType][$targetEntityTypeId])) {
+      $this->collectedData[$mapping]['fields'][$fieldType] = [$targetEntityTypeId => 1];
+      return;
     }
 
-    $data[$mapping]['fields'][$fieldType][$targetEntityTypeId]++;
-
-    return $data;
+    $this->collectedData[$mapping]['fields'][$fieldType][$targetEntityTypeId]++;
   }
 
-  protected function collectDefaultFieldData($data, $mapping, $fieldConfig) {
+  protected function collectDefaultFieldData(FieldConfigInterface $fieldConfig, string $mapping) {
     $fieldType = $fieldConfig->getType();
 
-    if (empty($data[$mapping]['fields'][$fieldType])) {
+    if (empty($this->collectedData[$mapping]['fields'][$fieldType])) {
       $data[$mapping]['fields'][$fieldType] = 1;
-      return $data;
+      return;
     }
 
-    $data[$mapping]['fields'][$fieldType]++;
-
-    return $data;
+    $this->collectedData[$mapping]['fields'][$fieldType]++;
   }
 
   /**
