@@ -64,8 +64,9 @@ class Reporter {
       $collection = $instance->collect();
       $entityTypeId = $instance->entityTypeId();
       $collectionKey = $instance->key();
+
       if (is_array($collection) && isset($this->report[$entityTypeId][$collectionKey])) {
-        $this->report[$entityTypeId][$collectionKey] = array_merge($this->report[$entityTypeId][$collectionKey], $collection);
+        $this->report[$entityTypeId][$collectionKey] = array_merge_recursive($this->report[$entityTypeId][$collectionKey], $collection);
       }
       else {
         $this->report[$entityTypeId][$collectionKey] = $collection;
