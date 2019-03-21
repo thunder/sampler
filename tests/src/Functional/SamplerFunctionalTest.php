@@ -27,6 +27,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     // Enbable file as it provides a fieldable entity with SQL storage but no
     // bundles.
     'file',
+    'sampler_test',
     'media_test_type',
   ];
 

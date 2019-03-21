@@ -19,7 +19,6 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
   protected static $modules = [
     'node',
     'sampler',
-    'sampler_test',
   ];
 
   /**
