@@ -111,20 +111,32 @@ class Bundle extends SamplerBase {
     $bundleField = $entityTypeDefinition->getKey('bundle');
     $bundles = array_keys($this->bundleInfo->getBundleInfo($entityTypeId));
 
-    $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId));
+    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
 
     foreach ($bundles as $bundle) {
       $mapping = $this->getGroupMapping($entityTypeId, $bundle);
+      $data[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
       $query->condition($bundleField, $bundle);
       $data[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
       $fields = array_diff_key(
-        array_keys($this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle)),
-        array_keys($baseFields)
+        $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
+        $baseFields
       );
-      $data[$mapping]['fields'] = count($fields);
+
+      /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
+      foreach ($fields as $fieldConfig) {
+        $fieldType = $fieldConfig->getType();
+
+        if (!isset($data[$mapping]['fields'][$fieldType])) {
+          $data[$mapping]['fields'][$fieldType] = 1;
+          continue;
+        }
+
+        $data[$mapping]['fields'][$fieldConfig->getType()]++;
+      }
     }
 
     return $data;
