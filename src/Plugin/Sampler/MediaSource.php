@@ -2,7 +2,6 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\SamplerBase;
 use Drupal\sampler\Traits\GroupedDataTrait;

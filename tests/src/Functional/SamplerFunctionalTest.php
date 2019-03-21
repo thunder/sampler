@@ -26,7 +26,8 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     'contact',
     // Enbable file as it provides a fieldable entity with SQL storage but no
     // bundles.
-    'file'
+    'file',
+    'media_test_type',
   ];
 
   /**
@@ -141,10 +142,9 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
   /**
    * Test sampling of media data.
    */
-
   public function testMediaDataSampling() {
     $report = $this->container->get('sampler.reporter')
-      ->anonymize()
+      ->anonymize(FALSE)
       ->collect()
       ->getReport();
 
