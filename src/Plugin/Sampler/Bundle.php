@@ -128,7 +128,7 @@ class Bundle extends SamplerBase {
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
-        if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])){
+        if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])) {
           $this->collectEntityReferenceData($fieldConfig, $mapping);
           continue;
         }
@@ -140,27 +140,48 @@ class Bundle extends SamplerBase {
     return $this->collectedData;
   }
 
-  protected function collectEntityReferenceData(FieldConfigInterface $fieldConfig, string $mapping) {
+  /**
+   * Collect entity reference data.
+   *
+   * For entity reference and entity reference revision fields, we collect the
+   * number of fields for a given target type.
+   *
+   * @param \Drupal\field\FieldConfigInterface $fieldConfig
+   *   The field configuration.
+   * @param string $mappedBundle
+   *   The mapped bundle name.
+   */
+  protected function collectEntityReferenceData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
     $fieldType = $fieldConfig->getType();
     $targetEntityTypeId = $fieldConfig->getSetting('target_type');
 
-    if (empty($this->collectedData[$mapping]['fields'][$fieldType][$targetEntityTypeId])) {
-      $this->collectedData[$mapping]['fields'][$fieldType] = [$targetEntityTypeId => 1];
+    if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType][$targetEntityTypeId])) {
+      $this->collectedData[$mappedBundle]['fields'][$fieldType] = [$targetEntityTypeId => 1];
       return;
     }
 
-    $this->collectedData[$mapping]['fields'][$fieldType][$targetEntityTypeId]++;
+    $this->collectedData[$mappedBundle]['fields'][$fieldType][$targetEntityTypeId]++;
   }
 
-  protected function collectDefaultFieldData(FieldConfigInterface $fieldConfig, string $mapping) {
+  /**
+   * Collect field data.
+   *
+   * By default we collect the number of fields of a given type.
+   *
+   * @param \Drupal\field\FieldConfigInterface $fieldConfig
+   *   The field configuration.
+   * @param string $mappedBundle
+   *   The mapped bundle name.
+   */
+  protected function collectDefaultFieldData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
     $fieldType = $fieldConfig->getType();
 
-    if (empty($this->collectedData[$mapping]['fields'][$fieldType])) {
-      $data[$mapping]['fields'][$fieldType] = 1;
+    if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
+      $this->collectedData[$mappedBundle]['fields'][$fieldType] = 1;
       return;
     }
 
-    $this->collectedData[$mapping]['fields'][$fieldType]++;
+    $this->collectedData[$mappedBundle]['fields'][$fieldType]++;
   }
 
   /**
