@@ -19,11 +19,14 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
    * @var array
    */
   protected static $modules = [
+    'field',
+    'media',
+    'taxonomy',
     // Enable contact as it provides a fieldable entity with no storage.
     'contact',
     // Enbable file as it provides a fieldable entity with SQL storage but no
     // bundles.
-    'file',
+    'file'
   ];
 
   /**
@@ -112,7 +115,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
   }
 
   /**
-   * Test sampling of node data.
+   * Test sampling of file data.
    */
   public function testFileDataSampling() {
     // Create test file.
@@ -133,6 +136,20 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $this->assertEquals(11, $fileReport['base_fields']);
     // @todo Add a file count.
+  }
+
+  /**
+   * Test sampling of media data.
+   */
+
+  public function testMediaDataSampling() {
+    $report = $this->container->get('sampler.reporter')
+      ->anonymize()
+      ->collect()
+      ->getReport();
+
+    $mediaReport = $report['media'];
+    $this->assertEquals('test', $mediaReport['bundle']['test']);
   }
 
   /**
