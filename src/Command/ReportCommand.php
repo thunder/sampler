@@ -21,8 +21,6 @@ use Drupal\Console\Annotations\DrupalCommand;
  */
 class ReportCommand extends ContainerAwareCommand {
 
-
-
   /**
    * The reporter instance.
    *

@@ -33,6 +33,8 @@ class SamplerCommands extends DrushCommands {
    *
    * @param \Drupal\sampler\Reporter $reporter
    *   The reporter service.
+   * @param \Drupal\sampler\ConfigCreator $configCreator
+   *   The config creator service.
    */
   public function __construct(Reporter $reporter, ConfigCreator $configCreator) {
     $this->reporter = $reporter;
@@ -68,7 +70,8 @@ class SamplerCommands extends DrushCommands {
   /**
    * Create config from a report file.
    *
-   * @param $file The report file the config should created of.
+   * @param string $file
+   *   The report file the config should created of.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginException
