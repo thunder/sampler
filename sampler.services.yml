@@ -7,4 +7,4 @@ services:
     parent: default_plugin_manager
   sampler.configCreator:
     class: Drupal\sampler\ConfigCreator
-    arguments: ['@sampler.reporter', '@entity_type.manager']
+    arguments: ['@sampler.reporter', '@entity_type.manager', '@plugin.manager.field.field_type']

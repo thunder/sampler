@@ -4,6 +4,7 @@ namespace Drupal\sampler;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
 
 /**
  * The ConfigCreator class.
@@ -34,11 +35,19 @@ class ConfigCreator {
   protected $entityTypeManager;
 
   /**
+   * The field type plugin manager service.
+   *
+   * @var \Drupal\Core\Field\FieldTypePluginManagerInterface
+   */
+  protected $fieldTypePluginManager;
+
+  /**
    * Constructs a new ConfigCreator object.
    */
-  public function __construct(Reporter $reporter, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(Reporter $reporter, EntityTypeManagerInterface $entityTypeManager, FieldTypePluginManagerInterface $fieldTypePluginManager) {
     $this->reporter = $reporter;
     $this->entityTypeManager = $entityTypeManager;
+    $this->fieldTypePluginManager = $fieldTypePluginManager;
   }
 
   /**
@@ -69,6 +78,14 @@ class ConfigCreator {
   public function cleanup() : ConfigCreator {
     foreach ($this->getEntityTypes() as $entity_type) {
       $definition = $this->entityTypeManager->getDefinition($entity_type);
+
+      // Delete fields.
+      $entities = $this->entityTypeManager->getStorage('field_config')->loadByProperties(['entity_type' => $entity_type]);
+      $this->entityTypeManager->getStorage('field_config')->delete($entities);
+
+      $entities = $this->entityTypeManager->getStorage('field_storage_config')->loadByProperties(['entity_type' => $entity_type]);
+      $this->entityTypeManager->getStorage('field_storage_config')->delete($entities);
+
       if ($definition->getBundleEntityType()) {
         // Delete all entities.
         $entities = $this->entityTypeManager->getStorage($entity_type)->loadMultiple();
@@ -95,20 +112,50 @@ class ConfigCreator {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function create(): ConfigCreator {
+    $fieldTypeDefinitions = $this->fieldTypePluginManager->getDefinitions();
 
     foreach ($this->getEntityTypes() as $entity_type) {
       $entity_definition = $this->entityTypeManager->getDefinition($entity_type);
+      $createdFields = [];
       if (!isset($this->reportData[$entity_type]['bundle'])) {
         continue;
       }
       foreach ($this->reportData[$entity_type]['bundle'] as $id => $bundle) {
         $bundle_definition = $this->entityTypeManager->getDefinition($entity_definition->getBundleEntityType());
 
+        // Create bundle.
         $bundle_entity = $this->entityTypeManager->getStorage($entity_definition->getBundleEntityType())->create([
           $bundle_definition->getKey('id') => $id,
           $bundle_definition->getKey('label') => $id,
         ]);
         $bundle_entity->save();
+
+        // Create fields.
+        foreach ($bundle['fields'] as $field_type => $count) {
+          if (!isset($fieldTypeDefinitions[$field_type])) {
+            continue;
+          }
+
+          for ($i = 0; $i < $count; $i++) {
+            $fieldName = $field_type . '_' . $i;
+            if (!in_array($fieldName, $createdFields)) {
+              $field_storage = $this->entityTypeManager->getStorage('field_storage_config')->create([
+                'field_name' => $fieldName,
+                'entity_type' => $entity_type,
+                'type' => $field_type,
+              ]);
+              $field_storage->save();
+              $createdFields[] = $fieldName;
+            }
+            $field_instance = $this->entityTypeManager->getStorage('field_config')->create([
+              'field_name' => $fieldName,
+              'entity_type' => $entity_type,
+              'type' => $field_type,
+              'bundle' => $bundle_entity->id(),
+            ]);
+            $field_instance->save();
+          }
+        }
       }
     }
 
