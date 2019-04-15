@@ -67,8 +67,6 @@ class MediaSource extends SamplerBase {
    * {@inheritdoc}
    */
   public function collect() {
-    $data = [];
-
     $entityTypeId = $this->entityTypeId();
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
     $bundleEntityType = $entityTypeDefinition->getBundleEntityType();
@@ -84,10 +82,10 @@ class MediaSource extends SamplerBase {
       }
 
       $mapping = $this->getGroupMapping($entityTypeId, $name);
-      $data[$mapping]['source'] = $source;
+      $this->collectedData[$mapping]['source'] = $source;
     }
 
-    return $data;
+    return $this->collectedData;
   }
 
   /**

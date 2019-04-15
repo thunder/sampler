@@ -6,6 +6,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\field\FieldConfigInterface;
 use Drupal\sampler\SamplerBase;
 use Drupal\sampler\Traits\GroupedDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -103,7 +104,6 @@ class Bundle extends SamplerBase {
    * {@inheritdoc}
    */
   public function collect() {
-    $data = [];
     $entityTypeId = $this->entityTypeId();
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
 
@@ -115,11 +115,11 @@ class Bundle extends SamplerBase {
 
     foreach ($bundles as $bundle) {
       $mapping = $this->getGroupMapping($entityTypeId, $bundle);
-      $data[$mapping] = ['fields' => []];
+      $this->collectedData[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
       $query->condition($bundleField, $bundle);
-      $data[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
+      $this->collectedData[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
       $fields = array_diff_key(
         $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
@@ -128,18 +128,60 @@ class Bundle extends SamplerBase {
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
-        $fieldType = $fieldConfig->getType();
-
-        if (!isset($data[$mapping]['fields'][$fieldType])) {
-          $data[$mapping]['fields'][$fieldType] = 1;
+        if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])) {
+          $this->collectEntityReferenceData($fieldConfig, $mapping);
           continue;
         }
 
-        $data[$mapping]['fields'][$fieldConfig->getType()]++;
+        $this->collectDefaultFieldData($fieldConfig, $mapping);
       }
     }
 
-    return $data;
+    return $this->collectedData;
+  }
+
+  /**
+   * Collect entity reference data.
+   *
+   * For entity reference and entity reference revision fields, we collect the
+   * number of fields for a given target type.
+   *
+   * @param \Drupal\field\FieldConfigInterface $fieldConfig
+   *   The field configuration.
+   * @param string $mappedBundle
+   *   The mapped bundle name.
+   */
+  protected function collectEntityReferenceData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
+    $fieldType = $fieldConfig->getType();
+    $targetEntityTypeId = $fieldConfig->getSetting('target_type');
+
+    if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType][$targetEntityTypeId])) {
+      $this->collectedData[$mappedBundle]['fields'][$fieldType] = [$targetEntityTypeId => 1];
+      return;
+    }
+
+    $this->collectedData[$mappedBundle]['fields'][$fieldType][$targetEntityTypeId]++;
+  }
+
+  /**
+   * Collect field data.
+   *
+   * By default we collect the number of fields of a given type.
+   *
+   * @param \Drupal\field\FieldConfigInterface $fieldConfig
+   *   The field configuration.
+   * @param string $mappedBundle
+   *   The mapped bundle name.
+   */
+  protected function collectDefaultFieldData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
+    $fieldType = $fieldConfig->getType();
+
+    if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
+      $this->collectedData[$mappedBundle]['fields'][$fieldType] = 1;
+      return;
+    }
+
+    $this->collectedData[$mappedBundle]['fields'][$fieldType]++;
   }
 
   /**

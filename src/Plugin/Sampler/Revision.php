@@ -77,7 +77,8 @@ class Revision extends SamplerBase {
    * {@inheritdoc}
    */
   public function collect() {
-    $histogram = [];
+    $baseId = $this->getBaseId();
+    $this->collectedData[$baseId] = [];
 
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
     $revisionTable = $entityTypeDefinition->getRevisionTable();
@@ -91,15 +92,15 @@ class Revision extends SamplerBase {
 
     $results = $query->execute();
     foreach ($results as $record) {
-      if (!isset($histogram[$record->count])) {
-        $histogram[$record->count] = 1;
+      if (!isset($this->collectedData[$baseId][$record->count])) {
+        $this->collectedData[$baseId][$record->count] = 1;
         continue;
       }
-      $histogram[$record->count]++;
+      $this->collectedData[$baseId][$record->count]++;
     }
 
-    ksort($histogram);
-    return [$this->getBaseId() => $histogram];
+    ksort($this->collectedData[$baseId]);
+    return $this->collectedData;
   }
 
   /**

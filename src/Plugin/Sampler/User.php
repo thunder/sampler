@@ -79,8 +79,6 @@ class User extends SamplerBase {
    * {@inheritdoc}
    */
   public function collect() {
-    $data = [];
-
     $roles = array_keys(user_roles(TRUE));
 
     $nodeEditingRoles = $this->getEditorRoles('node');
@@ -91,15 +89,15 @@ class User extends SamplerBase {
 
       $query = $this->connection->select('user__roles', 'b');
       $query->condition('roles_target_id', $role);
-      $data[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
-      $data[$mapping]['is_node_editing'] = in_array($mapping, $nodeEditingRoles);
-      $data[$mapping]['is_taxonomy_editing'] = in_array($mapping, $taxonomyEditingRoles);
+      $this->collectedData[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
+      $this->collectedData[$mapping]['is_node_editing'] = in_array($mapping, $nodeEditingRoles);
+      $this->collectedData[$mapping]['is_taxonomy_editing'] = in_array($mapping, $taxonomyEditingRoles);
 
     }
 
     // @todo user configurable field count?
-    return $data;
+    return $this->collectedData;
   }
 
   /**
