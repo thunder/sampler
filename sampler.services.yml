@@ -5,3 +5,6 @@ services:
   plugin.manager.sampler:
     class: Drupal\sampler\SamplerPluginManager
     parent: default_plugin_manager
+  sampler.configCreator:
+    class: Drupal\sampler\ConfigCreator
+    arguments: ['@sampler.reporter', '@entity_type.manager']

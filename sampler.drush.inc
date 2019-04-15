@@ -24,6 +24,17 @@ function sampler_drush_command() {
     ],
     'aliases' => ['sampler:report'],
   ];
+
+  $items['config-create'] = [
+    'description' => dt('Create config from a report file.'),
+    'arguments' => [
+      'file' => [
+        'description' => dt('The report file the config should created of.'),
+        'example-value' => 'report.json',
+      ],
+    ],
+    'aliases' => ['sampler:create-config'],
+  ];
   return $items;
 }
 
@@ -41,4 +52,19 @@ function drush_sampler_report() {
     ->anonymize($anonymize)
     ->collect()
     ->output($file);
+}
+
+/**
+ * Run the sampler create config.
+ */
+function drush_sampler_create_config() {
+  $args = drush_get_arguments();
+
+  $configCreator = \Drupal::getContainer()
+    ->get('sampler.configCreator');
+
+  $configCreator
+    ->setReportData($args['file'])
+    ->cleanup()
+    ->create();
 }

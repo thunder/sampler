@@ -2,6 +2,7 @@
 
 namespace Drupal\sampler\Commands;
 
+use Drupal\sampler\ConfigCreator;
 use Drupal\sampler\Reporter;
 use Drush\Commands\DrushCommands;
 
@@ -25,14 +26,17 @@ class SamplerCommands extends DrushCommands {
    */
   protected $reporter;
 
+  protected $configCreator;
+
   /**
    * SamplerCommands constructor.
    *
    * @param \Drupal\sampler\Reporter $reporter
    *   The reporter service.
    */
-  public function __construct(Reporter $reporter) {
+  public function __construct(Reporter $reporter, ConfigCreator $configCreator) {
     $this->reporter = $reporter;
+    $this->configCreator = $configCreator;
   }
 
   /**
@@ -59,6 +63,25 @@ class SamplerCommands extends DrushCommands {
       ->anonymize($anonymize)
       ->collect()
       ->output($options['file']);
+  }
+
+  /**
+   * Create config from a report file.
+   *
+   * @param $file The report file the config should created of.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *
+   * @command sampler:create-config
+   */
+  public function createConfig($file) {
+    $this->configCreator
+      ->setReportData($file)
+      ->cleanup()
+      ->create();
   }
 
 }

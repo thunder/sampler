@@ -4,3 +4,9 @@ services:
     arguments: ['@sampler.reporter']
     tags:
       - { name: drupal.command }
+
+  sampler.create_config:
+    class: Drupal\sampler\Command\CreateConfigCommand
+    arguments: ['@sampler.configCreator']
+    tags:
+      - { name: drupal.command }

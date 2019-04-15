@@ -1,6 +1,6 @@
 services:
   sampler.commands:
     class: \Drupal\sampler\Commands\SamplerCommands
-    arguments: ['@sampler.reporter']
+    arguments: ['@sampler.reporter', '@sampler.configCreator']
     tags:
       - { name: drush.command }
