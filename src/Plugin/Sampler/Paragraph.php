@@ -83,9 +83,7 @@ class Paragraph extends SamplerBase {
     $entityTypeDefinition = $this->entityTypeManager->getDefinition('paragraph');
     $dataTable = $entityTypeDefinition->getDataTable();
 
-    $query = $this->connection
-      ->select($dataTable, 'r')
-      ->fields('r', ['parent_type', 'parent_id']);
+    $query = $this->connection->select($dataTable, 'r');
 
     $query->condition('parent_type', $this->entityTypeId());
     $query->addExpression('count(id)', 'count');
