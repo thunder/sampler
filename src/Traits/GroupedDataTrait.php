@@ -50,13 +50,13 @@ trait GroupedDataTrait {
    * @return string
    *   The mapped value.
    */
-  protected function getGroupMapping($entityTypeId, $group): string {
+  protected function getGroupMapping(string $entityTypeId, string $group): string {
     if ($this->anonymize === FALSE) {
       return $group;
     }
 
     if (!isset($this->groupMapping[$entityTypeId])) {
-      $this->groupMapping[$entityTypeId] = [$group => 'group-0'];
+      $this->groupMapping[$entityTypeId] = [$group => 'group-00'];
       return $this->groupMapping[$entityTypeId][$group];
     }
 
