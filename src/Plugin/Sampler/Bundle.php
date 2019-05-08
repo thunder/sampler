@@ -2,6 +2,8 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
@@ -155,22 +157,16 @@ class Bundle extends SamplerBase {
     $fieldType = $fieldConfig->getType();
     $targetEntityTypeId = $fieldConfig->getSetting('target_type');
 
-    if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
-      $targetBundles = ($targetEntityTypeId == 'paragraph') ? array_keys($fieldConfig->getSetting('handler_settings')['target_bundles_drag_drop']) : array_values($fieldConfig->getSetting('handler_settings')['target_bundles']);
+    $targetBundles = ($targetEntityTypeId == 'paragraph') ? array_keys($fieldConfig->getSetting('handler_settings')['target_bundles_drag_drop']) : array_values($fieldConfig->getSetting('handler_settings')['target_bundles']);
+    $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
+      return $this->getGroupMapping($targetEntityTypeId, $bundle);
+    }, $targetBundles);
 
-      $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->getGroupMapping($targetEntityTypeId, $bundle);
-      }, $targetBundles);
-
-      $this->collectedData[$mappedBundle]['fields'][$fieldType] = [
-        'instances' => 1,
-        'target_type' => $targetEntityTypeId,
-        'target_bundles' => $targetBundles,
-      ];
-      return;
-    }
-
-    $this->collectedData[$mappedBundle]['fields'][$fieldType]['instances']++;
+    $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
+      'target_type' => $targetEntityTypeId,
+      'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
+      'target_bundles' => $targetBundles,
+    ];
   }
 
   /**
