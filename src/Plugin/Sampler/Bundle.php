@@ -160,10 +160,26 @@ class Bundle extends SamplerBase {
       return $this->getGroupMapping($targetEntityTypeId, $bundle);
     }, $targetBundles);
 
+    $dataTable = $this->entityTypeId() . '__' . $fieldConfig->getFieldStorageDefinition()->getName();
+    $query = $this->connection->select($dataTable, 'r');
+    $query->addExpression('count(bundle)', 'count');
+    $query->groupBy('entity_id');
+    $results = $query->execute();
+    $histogram = [];
+    foreach ($results as $record) {
+      if (!isset($histogram[$record->count])) {
+        $histogram[$record->count] = 1;
+        continue;
+      }
+      $histogram[$record->count]++;
+    }
+    ksort($histogram);
+
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
       'target_type' => $targetEntityTypeId,
       'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
       'target_bundles' => $targetBundles,
+      'histogram' => $histogram,
     ];
   }
 
