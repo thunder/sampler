@@ -155,16 +155,14 @@ class Bundle extends SamplerBase {
     $fieldType = $fieldConfig->getType();
     $targetEntityTypeId = $fieldConfig->getSetting('target_type');
 
-    $setting_name = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
+    $settingName = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
 
     $targetBundles = [];
-    if (!empty($fieldConfig->getSetting('handler_settings')[$setting_name])) {
-      $targetBundles = array_keys($fieldConfig->getSetting('handler_settings')[$setting_name]);
+    if (!empty($fieldConfig->getSetting('handler_settings')[$settingName])) {
+      $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
+        return $this->getGroupMapping($targetEntityTypeId, $bundle);
+      }, array_keys($fieldConfig->getSetting('handler_settings')[$settingName]));
     }
-
-    $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-      return $this->getGroupMapping($targetEntityTypeId, $bundle);
-    }, $targetBundles ?: []);
 
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
       'target_type' => $targetEntityTypeId,
