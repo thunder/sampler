@@ -158,7 +158,7 @@ class Bundle extends SamplerBase {
     $targetBundles = ($targetEntityTypeId == 'paragraph') ? array_keys($fieldConfig->getSetting('handler_settings')['target_bundles_drag_drop']) : array_values($fieldConfig->getSetting('handler_settings')['target_bundles']);
     $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
       return $this->getGroupMapping($targetEntityTypeId, $bundle);
-    }, $targetBundles);
+    }, $targetBundles ?: []);
 
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
       'target_type' => $targetEntityTypeId,
