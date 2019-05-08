@@ -5,7 +5,7 @@ dependencies:
     - field.storage.node.field_four
     - node.type.type_one
     - node.type.type_two
-id: node.type_one.field_three
+id: node.type_one.field_four
 field_name: field_four
 entity_type: node
 bundle: type_one
