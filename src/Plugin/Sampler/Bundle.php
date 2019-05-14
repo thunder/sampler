@@ -164,18 +164,27 @@ class Bundle extends SamplerBase {
       }, array_keys($fieldConfig->getSetting('handler_settings')[$settingName]));
     }
 
-    $dataTable = $this->entityTypeId() . '__' . $fieldConfig->getFieldStorageDefinition()->getName();
-    $query = $this->connection->select($dataTable, 'r');
-    $query->addExpression('count(bundle)', 'count');
-    $query->groupBy('entity_id');
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
+
+    $bundleField = $entityTypeDefinition->getKey('bundle');
+    $idField = $entityTypeDefinition->getKey('id');
+
+    $table_mapping = $this->entityTypeManager->getStorage($this->entityTypeId())->getTableMapping();
+    $dataTable = $table_mapping->getFieldTableName($fieldConfig->getFieldStorageDefinition()->getName());
+
+    $query = $this->connection->select($dataTable, 'ft');
+    $query->addExpression('count(ft.bundle)', 'number_of_entries');
+    $query->innerJoin($entityTypeDefinition->getBaseTable(), 'bt', "bt.$idField=ft.entity_id");
+    $query->condition("bt.$bundleField", $fieldConfig->getTargetBundle());
+    $query->groupBy('ft.entity_id');
     $results = $query->execute();
     $histogram = [];
     foreach ($results as $record) {
-      if (!isset($histogram[$record->count])) {
-        $histogram[$record->count] = 1;
+      if (!isset($histogram[$record->number_of_entries])) {
+        $histogram[$record->number_of_entries] = 1;
         continue;
       }
-      $histogram[$record->count]++;
+      $histogram[$record->number_of_entries]++;
     }
     ksort($histogram);
 
