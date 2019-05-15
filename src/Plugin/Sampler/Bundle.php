@@ -185,11 +185,14 @@ class Bundle extends SamplerBase {
     $fieldType = $fieldConfig->getType();
 
     if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
-      $this->collectedData[$mappedBundle]['fields'][$fieldType] = 1;
-      return;
+      $this->collectedData[$mappedBundle]['fields'][$fieldType] = [];
     }
 
-    $this->collectedData[$mappedBundle]['fields'][$fieldType]++;
+    $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
+      'required' => $fieldConfig->isRequired(),
+      'is_translatable' => $fieldConfig->isTranslatable(),
+      'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
+    ];
   }
 
   /**
