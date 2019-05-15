@@ -112,12 +112,25 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
     $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
-    $this->assertEquals(2, $nodeReport['bundle'][$nodeTypeOne]['fields']['string']);
-    $this->assertCount(2, $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference']);
-    $this->assertEquals('node', $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][0]['target_type']);
-    $this->assertEquals(['type_one', 'type_two'], $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][0]['target_bundles']);
-    $this->assertEquals(['type_one'], $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][1]['target_bundles']);
-    $this->assertEmpty($nodeReport['bundle'][$nodeTypeTwo]['fields']);
+    $nodeOneFieldsReport = $nodeReport['bundle'][$nodeTypeOne]['fields'];
+    $nodeTwoFieldsReport = $nodeReport['bundle'][$nodeTypeTwo]['fields'];
+
+    $this->assertCount(2, $nodeOneFieldsReport['string']);
+
+    $this->assertEquals(0, $nodeOneFieldsReport['string'][0]['is_required']);
+    $this->assertEquals(1, $nodeOneFieldsReport['string'][0]['is_translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport['string'][0]['cardinality']);
+
+    $this->assertEquals(1, $nodeOneFieldsReport['string'][1]['is_required']);
+    $this->assertEquals(0, $nodeOneFieldsReport['string'][1]['is_translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport['string'][1]['cardinality']);
+
+    $this->assertCount(2, $nodeOneFieldsReport['entity_reference']);
+    $this->assertEquals('node', $nodeOneFieldsReport['entity_reference'][0]['target_type']);
+    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport['entity_reference'][0]['target_bundles']);
+    $this->assertEquals(['type_one'], $nodeOneFieldsReport['entity_reference'][1]['target_bundles']);
+
+    $this->assertEmpty($nodeTwoFieldsReport);
   }
 
   /**

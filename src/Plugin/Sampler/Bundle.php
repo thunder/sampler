@@ -174,7 +174,8 @@ class Bundle extends SamplerBase {
   /**
    * Collect field data.
    *
-   * By default we collect the number of fields of a given type.
+   * By default we collect cardinality, is_required and is_translatable
+   * for each field.
    *
    * @param \Drupal\field\FieldConfigInterface $fieldConfig
    *   The field configuration.
@@ -189,8 +190,8 @@ class Bundle extends SamplerBase {
     }
 
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
-      'required' => $fieldConfig->isRequired(),
-      'is_translatable' => $fieldConfig->isTranslatable(),
+      'is_required' => (integer) $fieldConfig->isRequired(),
+      'is_translatable' => (integer) $fieldConfig->isTranslatable(),
       'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
     ];
   }
