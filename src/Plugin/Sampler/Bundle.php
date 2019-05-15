@@ -177,22 +177,14 @@ class Bundle extends SamplerBase {
     $query->innerJoin($entityTypeDefinition->getBaseTable(), 'bt', "bt.$idField=ft.entity_id");
     $query->condition("bt.$bundleField", $fieldConfig->getTargetBundle());
     $query->groupBy('ft.entity_id');
-    $results = $query->execute();
-    $histogram = [];
-    foreach ($results as $record) {
-      if (!isset($histogram[$record->number_of_entries])) {
-        $histogram[$record->number_of_entries] = 1;
-        continue;
-      }
-      $histogram[$record->number_of_entries]++;
-    }
-    ksort($histogram);
+    $query->orderBy('number_of_entries');
+    $results = $query->execute()->fetchCol();
 
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
       'target_type' => $targetEntityTypeId,
       'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
       'target_bundles' => $targetBundles,
-      'histogram' => $histogram,
+      'histogram' => array_count_values($results),
     ];
   }
 
