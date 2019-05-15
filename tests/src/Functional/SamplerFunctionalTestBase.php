@@ -57,7 +57,8 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function createNodesOfType(string $type, int $numberOfNodes, int $numberOfRevisions) {
+  protected function createNodesOfType(string $type, int $numberOfNodes, int $numberOfRevisions = 1) {
+    $nodes = [];
     for ($i = 0; $i < $numberOfNodes; $i++) {
       $node = Node::create([
         'type' => $type,
@@ -68,7 +69,9 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
         $node->setNewRevision(TRUE);
         $node->save();
       }
+      $nodes[] = $node;
     }
+    return $nodes;
   }
 
 }

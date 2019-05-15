@@ -164,10 +164,27 @@ class Bundle extends SamplerBase {
       }, array_keys($fieldConfig->getSetting('handler_settings')[$settingName]));
     }
 
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
+
+    $bundleField = $entityTypeDefinition->getKey('bundle');
+    $idField = $entityTypeDefinition->getKey('id');
+
+    $table_mapping = $this->entityTypeManager->getStorage($this->entityTypeId())->getTableMapping();
+    $dataTable = $table_mapping->getFieldTableName($fieldConfig->getFieldStorageDefinition()->getName());
+
+    $query = $this->connection->select($dataTable, 'ft');
+    $query->addExpression('count(ft.bundle)', 'number_of_entries');
+    $query->innerJoin($entityTypeDefinition->getBaseTable(), 'bt', "bt.$idField=ft.entity_id");
+    $query->condition("bt.$bundleField", $fieldConfig->getTargetBundle());
+    $query->groupBy('ft.entity_id');
+    $query->orderBy('number_of_entries');
+    $results = $query->execute()->fetchCol();
+
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
       'target_type' => $targetEntityTypeId,
       'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
       'target_bundles' => $targetBundles,
+      'histogram' => array_count_values($results),
     ];
   }
 

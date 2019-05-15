@@ -3,6 +3,7 @@
 namespace Drupal\Tests\sampler\Functional;
 
 use Drupal\file\Entity\File;
+use Drupal\node\Entity\Node;
 use Drupal\Tests\TestFileCreationTrait;
 
 /**
@@ -182,6 +183,32 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertEquals($numberOfNodesWithOneRevisions, $histogramReport['revision'][1]);
     $this->assertEquals($numberOfNodesWithTwoRevisions, $histogramReport['revision'][2]);
     $this->assertEquals($numberOfNodesWithThreeRevisions, $histogramReport['revision'][3]);
+  }
+
+  /**
+   * Test sampling of data for entity reference histograms.
+   */
+  public function testEntityReferenceHistogramDataSampling() {
+    $nodeTypeOne = 'type_one';
+
+    $nodes = $this->createNodesOfType($nodeTypeOne, 6);
+
+    Node::create([
+      'type' => $nodeTypeOne,
+      'title' => $this->randomString(),
+      'field_three' => [$nodes[3]->id()],
+      'field_four' => [$nodes[1]->id(), $nodes[2]->id()],
+    ])->save();
+
+    $report = $this->container->get('sampler.reporter')
+      ->anonymize(FALSE)
+      ->collect()
+      ->getReport();
+
+    $nodeReport = $report['node'];
+
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][0]['histogram'][2]);
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][1]['histogram'][1]);
   }
 
 }
