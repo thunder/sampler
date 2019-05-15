@@ -185,13 +185,13 @@ class Bundle extends SamplerBase {
   protected function collectDefaultFieldData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
     $fieldType = $fieldConfig->getType();
 
-    if (empty($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
+    if (!isset($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
       $this->collectedData[$mappedBundle]['fields'][$fieldType] = [];
     }
 
     $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
-      'is_required' => (integer) $fieldConfig->isRequired(),
-      'is_translatable' => (integer) $fieldConfig->isTranslatable(),
+      'required' => (bool) $fieldConfig->isRequired(),
+      'translatable' => (bool) $fieldConfig->isTranslatable(),
       'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
     ];
   }

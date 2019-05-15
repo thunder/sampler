@@ -117,13 +117,13 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $this->assertCount(2, $nodeOneFieldsReport['string']);
 
-    $this->assertEquals(0, $nodeOneFieldsReport['string'][0]['is_required']);
-    $this->assertEquals(1, $nodeOneFieldsReport['string'][0]['is_translatable']);
-    $this->assertEquals(1, $nodeOneFieldsReport['string'][0]['cardinality']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport['string'][0]['required']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][0]['translatable']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][0]['cardinality']);
 
-    $this->assertEquals(1, $nodeOneFieldsReport['string'][1]['is_required']);
-    $this->assertEquals(0, $nodeOneFieldsReport['string'][1]['is_translatable']);
-    $this->assertEquals(1, $nodeOneFieldsReport['string'][1]['cardinality']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][1]['required']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport['string'][1]['translatable']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][1]['cardinality']);
 
     $this->assertCount(2, $nodeOneFieldsReport['entity_reference']);
     $this->assertEquals('node', $nodeOneFieldsReport['entity_reference'][0]['target_type']);
