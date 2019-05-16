@@ -7,8 +7,8 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\SamplerBase;
-use Drupal\sampler\Traits\GroupedDataTrait;
 use Drupal\sampler\Traits\FieldDataTrait;
+use Drupal\sampler\Traits\GroupedDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
