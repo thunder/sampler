@@ -2,8 +2,11 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\SamplerBase;
+use Drupal\sampler\Traits\FieldDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,6 +20,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class BaseFields extends SamplerBase {
+  use FieldDataTrait;
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * The entity field manager service.
@@ -24,6 +35,13 @@ class BaseFields extends SamplerBase {
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
+
+  /**
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
 
   /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
@@ -40,13 +58,19 @@ class BaseFields extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityFieldManagerInterface $entityFieldManager) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
+    $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
+    $this->connection = $connection;
   }
 
   /**
@@ -57,7 +81,9 @@ class BaseFields extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity_field.manager')
+      $container->get('entity_type.manager'),
+      $container->get('entity_field.manager'),
+      $container->get('database')
     );
   }
 
@@ -65,8 +91,24 @@ class BaseFields extends SamplerBase {
    * {@inheritdoc}
    */
   public function collect() {
-    $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId()));
-    return count($baseFields);
+    /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
+    foreach ($this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId()) as $fieldDefinition) {
+      $fieldType = $fieldDefinition->getType();
+
+      if (!isset($this->collectedData[$fieldType])) {
+        $this->collectedData[$fieldType] = [];
+      }
+
+      $fieldData = $this->collectDefaultFieldData($fieldDefinition);
+
+      if (in_array($fieldDefinition->getType(), ['entity_reference', 'entity_reference_revisions'])) {
+        $fieldData = array_merge($fieldData, $this->collectEntityReferenceData($fieldDefinition));
+      }
+
+      $this->collectedData[$fieldType] = $fieldData;
+    }
+
+    return $this->collectedData;
   }
 
   /**
