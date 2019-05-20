@@ -4,6 +4,7 @@ namespace Drupal\sampler;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\sampler\Traits\GroupedDataTrait;
 
