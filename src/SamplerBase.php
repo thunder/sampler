@@ -19,6 +19,13 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   protected $groupMapping;
 
   /**
+   * The collected data.
+   *
+   * @var array
+   */
+  protected $collectedData = [];
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * @param array $configuration

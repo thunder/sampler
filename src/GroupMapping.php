@@ -24,6 +24,11 @@ class GroupMapping {
   protected $groupMapping = [];
 
   /**
+   * Prefix for anonymized group names.
+   */
+  private const GROUP_PREFIX = 'group-';
+
+  /**
    * Get mapped value of a group.
    *
    * @param string $entityTypeId
@@ -40,13 +45,12 @@ class GroupMapping {
     }
 
     if (!isset($this->groupMapping[$entityTypeId])) {
-      $this->groupMapping[$entityTypeId] = [$group => 'group-00'];
+      $this->groupMapping[$entityTypeId] = [$group => self::GROUP_PREFIX . 0];
       return $this->groupMapping[$entityTypeId][$group];
     }
 
     if (!isset($this->groupMapping[$entityTypeId][$group])) {
-      $last = end($this->groupMapping[$entityTypeId]);
-      $this->groupMapping[$entityTypeId][$group] = ++$last;
+      $this->groupMapping[$entityTypeId][$group] = self::GROUP_PREFIX . count($this->groupMapping[$entityTypeId]);
     }
 
     return $this->groupMapping[$entityTypeId][$group];
