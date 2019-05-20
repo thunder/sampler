@@ -6,8 +6,8 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\sampler\FieldData;
 use Drupal\sampler\SamplerBase;
-use Drupal\sampler\Traits\FieldDataTrait;
 use Drupal\sampler\Traits\GroupedDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -23,7 +23,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class Bundle extends SamplerBase {
   use GroupedDataTrait;
-  use FieldDataTrait;
 
   /**
    * The entity type manager service.
@@ -54,6 +53,13 @@ class Bundle extends SamplerBase {
   protected $bundleInfo;
 
   /**
+   * The field data service.
+   *
+   * @var \Drupal\sampler\FieldData
+   */
+  protected $fieldData;
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some
@@ -76,14 +82,18 @@ class Bundle extends SamplerBase {
    *   The bundle information service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
+   * @param \Drupal\sampler\FieldData $fieldData
+   *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
     $this->bundleInfo = $bundle_info;
     $this->connection = $connection;
+    $this->fieldData = $fieldData;
+
   }
 
   /**
@@ -97,7 +107,8 @@ class Bundle extends SamplerBase {
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('database')
+      $container->get('database'),
+      $container->get('sampler.field.data')
     );
   }
 
@@ -113,6 +124,8 @@ class Bundle extends SamplerBase {
     $bundles = array_keys($this->bundleInfo->getBundleInfo($entityTypeId));
 
     $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
+
+    $this->fieldData->anonymize($this->anonymize);
 
     foreach ($bundles as $bundle) {
       $mapping = $this->getGroupMapping($entityTypeId, $bundle);
@@ -134,10 +147,10 @@ class Bundle extends SamplerBase {
           $this->collectedData[$mapping]['fields'][$fieldType] = [];
         }
 
-        $fieldData = $this->collectDefaultFieldData($fieldConfig, $mapping);
+        $fieldData = $this->fieldData->defaultFieldData($fieldConfig);
 
         if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])) {
-          $fieldData = array_merge($fieldData, $this->collectEntityReferenceData($fieldConfig));
+          $fieldData = array_merge($fieldData, $this->fieldData->entityReferenceFieldData($fieldConfig, $this->entityTypeId()));
         }
 
         $this->collectedData[$mapping]['fields'][$fieldType][] = $fieldData;
