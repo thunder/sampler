@@ -39,7 +39,7 @@ class GroupMapping {
    * @return string
    *   The mapped value.
    */
-  public function getGroupMapping(string $entityTypeId, string $group): string {
+  public function getGroupMapping(string $entityTypeId, string $group) {
     if ($this->anonymize === FALSE) {
       return $group;
     }
