@@ -4,6 +4,7 @@ namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -48,13 +49,15 @@ class Revision extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, Connection $connection) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, Connection $connection) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->connection = $connection;
@@ -68,6 +71,7 @@ class Revision extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('sampler.group_mapping'),
       $container->get('entity_type.manager'),
       $container->get('database')
     );

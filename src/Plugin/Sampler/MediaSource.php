@@ -3,8 +3,8 @@
 namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
-use Drupal\sampler\Traits\GroupedDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,7 +18,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class MediaSource extends SamplerBase {
-  use GroupedDataTrait;
 
   /**
    * The entity type manager service.
@@ -42,11 +41,13 @@ class MediaSource extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entity_type_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -59,12 +60,16 @@ class MediaSource extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('sampler.group_mapping'),
       $container->get('entity_type.manager')
     );
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect() {
     $entityTypeId = $this->entityTypeId();
@@ -81,7 +86,7 @@ class MediaSource extends SamplerBase {
         $source = $type->getSource()->getPluginId();
       }
 
-      $mapping = $this->getGroupMapping($entityTypeId, $name);
+      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $name);
       $this->collectedData[$mapping]['source'] = $source;
     }
 
