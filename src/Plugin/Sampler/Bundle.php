@@ -94,7 +94,6 @@ class Bundle extends SamplerBase {
     $this->bundleInfo = $bundle_info;
     $this->connection = $connection;
     $this->fieldData = $fieldData;
-
   }
 
   /**
