@@ -66,7 +66,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $userReport = $report['user'];
 
-    $this->assertCount(11, $userReport['base_fields']);
+    $this->assertCount(17, $userReport['base_fields']);
 
     // Test if the report contains the correct number of users per role.
     $this->assertEquals($numberOfRestricted, $userReport['role'][$nonEditingRid]['instances']);
@@ -109,7 +109,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $nodeReport = $report['node'];
 
-    $this->assertCount(9, $nodeReport['base_fields']);
+    $this->assertCount(18, $nodeReport['base_fields']);
     $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
     $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
@@ -154,7 +154,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $fileReport = $report['file'];
 
-    $this->assertCount(9, $fileReport['base_fields']);
+    $this->assertCount(17, $fileReport['base_fields']);
     // @todo Add a file count.
   }
 
