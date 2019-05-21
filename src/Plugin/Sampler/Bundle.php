@@ -6,7 +6,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\field\FieldConfigInterface;
+use Drupal\sampler\FieldData;
 use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -52,6 +52,13 @@ class Bundle extends SamplerBase {
   protected $bundleInfo;
 
   /**
+   * The field data service.
+   *
+   * @var \Drupal\sampler\FieldData
+   */
+  protected $fieldData;
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some
@@ -76,14 +83,17 @@ class Bundle extends SamplerBase {
    *   The bundle information service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
+   * @param \Drupal\sampler\FieldData $fieldData
+   *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
     $this->bundleInfo = $bundle_info;
     $this->connection = $connection;
+    $this->fieldData = $fieldData;
   }
 
   /**
@@ -98,7 +108,8 @@ class Bundle extends SamplerBase {
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('database')
+      $container->get('database'),
+      $container->get('sampler.field_data')
     );
   }
 
@@ -133,92 +144,18 @@ class Bundle extends SamplerBase {
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
-        if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])) {
-          $this->collectEntityReferenceData($fieldConfig, $mapping);
-          continue;
+        $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
+        $fieldType = $fieldConfig->getType();
+
+        if (!isset($this->collectedData[$mapping]['fields'][$fieldType])) {
+          $this->collectedData[$mapping]['fields'][$fieldType] = [];
         }
 
-        $this->collectDefaultFieldData($fieldConfig, $mapping);
+        $this->collectedData[$mapping]['fields'][$fieldType][] = $fieldData;
       }
     }
 
     return $this->collectedData;
-  }
-
-  /**
-   * Collect entity reference data.
-   *
-   * For entity reference and entity reference revision fields, we collect the
-   * number of fields for a given target type.
-   *
-   * @param \Drupal\field\FieldConfigInterface $fieldConfig
-   *   The field configuration.
-   * @param string $mappedBundle
-   *   The mapped bundle name.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function collectEntityReferenceData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
-    $fieldType = $fieldConfig->getType();
-    $targetEntityTypeId = $fieldConfig->getSetting('target_type');
-
-    $settingName = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
-
-    $targetBundles = [];
-    if (!empty($fieldConfig->getSetting('handler_settings')[$settingName])) {
-      $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->groupMapping->getGroupMapping($targetEntityTypeId, $bundle);
-      }, array_keys($fieldConfig->getSetting('handler_settings')[$settingName]));
-    }
-
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
-
-    $bundleField = $entityTypeDefinition->getKey('bundle');
-    $idField = $entityTypeDefinition->getKey('id');
-
-    $table_mapping = $this->entityTypeManager->getStorage($this->entityTypeId())->getTableMapping();
-    $dataTable = $table_mapping->getFieldTableName($fieldConfig->getFieldStorageDefinition()->getName());
-
-    $query = $this->connection->select($dataTable, 'ft');
-    $query->addExpression('count(ft.bundle)', 'number_of_entries');
-    $query->innerJoin($entityTypeDefinition->getBaseTable(), 'bt', "bt.$idField=ft.entity_id");
-    $query->condition("bt.$bundleField", $fieldConfig->getTargetBundle());
-    $query->groupBy('ft.entity_id');
-    $query->orderBy('number_of_entries');
-    $results = $query->execute()->fetchCol();
-
-    $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
-      'target_type' => $targetEntityTypeId,
-      'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
-      'target_bundles' => $targetBundles,
-      'histogram' => array_count_values($results),
-    ];
-  }
-
-  /**
-   * Collect field data.
-   *
-   * By default we collect cardinality, is_required and is_translatable
-   * for each field.
-   *
-   * @param \Drupal\field\FieldConfigInterface $fieldConfig
-   *   The field configuration.
-   * @param string $mappedBundle
-   *   The mapped bundle name.
-   */
-  protected function collectDefaultFieldData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
-    $fieldType = $fieldConfig->getType();
-
-    if (!isset($this->collectedData[$mappedBundle]['fields'][$fieldType])) {
-      $this->collectedData[$mappedBundle]['fields'][$fieldType] = [];
-    }
-
-    $this->collectedData[$mappedBundle]['fields'][$fieldType][] = [
-      'required' => (bool) $fieldConfig->isRequired(),
-      'translatable' => (bool) $fieldConfig->isTranslatable(),
-      'cardinality' => $fieldConfig->getFieldStorageDefinition()->getCardinality(),
-    ];
   }
 
   /**
