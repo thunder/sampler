@@ -144,15 +144,11 @@ class Bundle extends SamplerBase {
 
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
+        $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
         $fieldType = $fieldConfig->getType();
+
         if (!isset($this->collectedData[$mapping]['fields'][$fieldType])) {
           $this->collectedData[$mapping]['fields'][$fieldType] = [];
-        }
-
-        $fieldData = $this->fieldData->defaultFieldData($fieldConfig);
-
-        if (in_array($fieldConfig->getType(), ['entity_reference', 'entity_reference_revisions'])) {
-          $fieldData = array_merge($fieldData, $this->fieldData->entityReferenceFieldData($fieldConfig, $this->entityTypeId()));
         }
 
         $this->collectedData[$mapping]['fields'][$fieldType][] = $fieldData;
