@@ -84,15 +84,17 @@ class BaseFields extends SamplerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect() {
+    $entityTypeId = $this->entityTypeId();
+
     /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
-    foreach ($this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId()) as $fieldDefinition) {
+    foreach ($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId) as $fieldDefinition) {
       $fieldType = $fieldDefinition->getType();
 
       if (!isset($this->collectedData[$fieldType])) {
         $this->collectedData[$fieldType] = [];
       }
 
-      $this->collectedData[$fieldType] = $this->fieldData->collect($fieldDefinition, $this->entityTypeId());
+      $this->collectedData[$fieldType] = $this->fieldData->collect($fieldDefinition, $entityTypeId);
     }
 
     return $this->collectedData;
