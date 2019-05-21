@@ -83,9 +83,11 @@ class FieldData {
     $this->fieldDefinition = $field_definition;
     $this->entityTypeId = $entity_type_id;
 
+    // Data common for all fields.
     $fieldData = $this->defaultFieldData();
 
-    if (in_array($this->fieldDefinition->getType(), ['entity_reference', 'entity_reference_revisions'])) {
+    // Reference field specific data.
+    if ($this->isReferenceField()) {
       $fieldData = array_merge($fieldData, $this->entityReferenceFieldData());
     }
 
@@ -128,7 +130,6 @@ class FieldData {
     $entityTypeId = $this->entityTypeId;
 
     $targetEntityTypeId = $fieldDefinition->getSetting('target_type');
-
     $settingName = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
 
     $targetBundles = [];
@@ -138,15 +139,17 @@ class FieldData {
       }, array_keys($fieldDefinition->getSetting('handler_settings')[$settingName]));
     }
 
+    // Data common for all entity references.
     $data = [
       'target_type' => $targetEntityTypeId,
       'target_bundles' => $targetBundles,
     ];
 
-    if ($fieldDefinition instanceof BaseFieldDefinition) {
+    if ($this->isBaseField()) {
       return $data;
     }
 
+    // Add histogram of number of entries in bundle.
     $data['histogram'] = $this->histogramData($fieldDefinition, $entityTypeId);
 
     return $data;
@@ -173,7 +176,6 @@ class FieldData {
       ->getTableMapping();
     $dataTable = $table_mapping->getFieldTableName($fieldDefinition->getFieldStorageDefinition()
       ->getName());
-
     $query = $this->connection->select($dataTable, 'ft');
     $query->addExpression('count(ft.bundle)', 'number_of_entries');
     $query->innerJoin($entityTypeDefinition->getBaseTable(), 'bt',
@@ -184,6 +186,26 @@ class FieldData {
     $results = $query->execute()->fetchCol();
 
     return array_count_values($results);
+  }
+
+  /**
+   * Check, if current filed is a reference field.
+   *
+   * @return bool
+   *   Field is reference field.
+   */
+  protected function isReferenceField() {
+    return in_array($this->fieldDefinition->getType(), ['entity_reference', 'entity_reference_revisions']);
+  }
+
+  /**
+   * Check, if current field is an entity base field.
+   *
+   * @return bool
+   *   Field is base field.
+   */
+  protected function isBaseField() {
+    return ($this->fieldDefinition instanceof BaseFieldDefinition);
   }
 
 }
