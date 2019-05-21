@@ -31,20 +31,23 @@ class Reporter {
   protected $samplerPluginManager;
 
   /**
-   * Store if data should be anonymized.
+   * The group mapping service.
    *
-   * @var bool
+   * @var \Drupal\sampler\GroupMapping
    */
-  protected $anonymize = TRUE;
+  protected $groupMapping;
 
   /**
    * Reporter constructor.
    *
    * @param \Drupal\sampler\SamplerPluginManager $sampler_plugin_manager
    *   The group count manager service.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    */
-  public function __construct(SamplerPluginManager $sampler_plugin_manager) {
+  public function __construct(SamplerPluginManager $sampler_plugin_manager, GroupMapping $group_mapping) {
     $this->samplerPluginManager = $sampler_plugin_manager;
+    $this->groupMapping = $group_mapping;
   }
 
   /**
@@ -58,8 +61,6 @@ class Reporter {
     foreach ($this->samplerPluginManager->getDefinitions() as $plugin_id => $definition) {
       /** @var \Drupal\sampler\SamplerInterface $instance */
       $instance = $this->samplerPluginManager->createInstance($plugin_id);
-
-      $instance->anonymize($this->anonymize);
 
       $collection = $instance->collect();
       $entityTypeId = $instance->entityTypeId();
@@ -121,7 +122,7 @@ class Reporter {
    * @return $this
    */
   public function anonymize(bool $anonymize): Reporter {
-    $this->anonymize = $anonymize;
+    $this->groupMapping->anonymize($anonymize);
 
     return $this;
   }

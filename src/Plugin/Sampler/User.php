@@ -3,8 +3,8 @@
 namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Database\Connection;
+use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
-use Drupal\sampler\Traits\GroupedDataTrait;
 use Drupal\user\PermissionHandlerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,7 +19,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class User extends SamplerBase {
-  use GroupedDataTrait;
 
   /**
    * The permission handler service.
@@ -50,13 +49,15 @@ class User extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\user\PermissionHandlerInterface $permission_handler
    *   The permission handler service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, PermissionHandlerInterface $permission_handler, Connection $connection) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, PermissionHandlerInterface $permission_handler, Connection $connection) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->permissionHandler = $permission_handler;
     $this->connection = $connection;
@@ -70,6 +71,7 @@ class User extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('sampler.group_mapping'),
       $container->get('user.permissions'),
       $container->get('database')
     );
@@ -85,7 +87,7 @@ class User extends SamplerBase {
     $taxonomyEditingRoles = $this->getEditorRoles('taxonomy');
 
     foreach ($roles as $role) {
-      $mapping = $this->getGroupMapping($this->entityTypeId(), $role);
+      $mapping = $this->groupMapping->getGroupMapping($this->entityTypeId(), $role);
 
       $query = $this->connection->select('user__roles', 'b');
       $query->condition('roles_target_id', $role);
@@ -123,7 +125,7 @@ class User extends SamplerBase {
 
     $roleNames = array_map(
       function ($role) {
-        return $this->getGroupMapping($this->entityTypeId(), $role);
+        return $this->groupMapping->getGroupMapping($this->entityTypeId(), $role);
       },
       array_keys($roles)
     );

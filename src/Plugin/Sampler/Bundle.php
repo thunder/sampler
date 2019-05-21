@@ -7,8 +7,8 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\field\FieldConfigInterface;
+use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
-use Drupal\sampler\Traits\GroupedDataTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,7 +22,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Bundle extends SamplerBase {
-  use GroupedDataTrait;
 
   /**
    * The entity type manager service.
@@ -67,6 +66,8 @@ class Bundle extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
@@ -76,8 +77,8 @@ class Bundle extends SamplerBase {
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
@@ -93,6 +94,7 @@ class Bundle extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('sampler.group_mapping'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
@@ -102,6 +104,9 @@ class Bundle extends SamplerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect() {
     $entityTypeId = $this->entityTypeId();
@@ -114,7 +119,7 @@ class Bundle extends SamplerBase {
     $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
 
     foreach ($bundles as $bundle) {
-      $mapping = $this->getGroupMapping($entityTypeId, $bundle);
+      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $bundle);
       $this->collectedData[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
@@ -150,6 +155,9 @@ class Bundle extends SamplerBase {
    *   The field configuration.
    * @param string $mappedBundle
    *   The mapped bundle name.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function collectEntityReferenceData(FieldConfigInterface $fieldConfig, string $mappedBundle) {
     $fieldType = $fieldConfig->getType();
@@ -160,7 +168,7 @@ class Bundle extends SamplerBase {
     $targetBundles = [];
     if (!empty($fieldConfig->getSetting('handler_settings')[$settingName])) {
       $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->getGroupMapping($targetEntityTypeId, $bundle);
+        return $this->groupMapping->getGroupMapping($targetEntityTypeId, $bundle);
       }, array_keys($fieldConfig->getSetting('handler_settings')[$settingName]));
     }
 

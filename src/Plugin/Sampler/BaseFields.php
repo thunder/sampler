@@ -3,6 +3,7 @@
 namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -40,11 +41,13 @@ class BaseFields extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityFieldManagerInterface $entityFieldManager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityFieldManagerInterface $entityFieldManager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityFieldManager = $entityFieldManager;
   }
@@ -57,6 +60,7 @@ class BaseFields extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('sampler.group_mapping'),
       $container->get('entity_field.manager')
     );
   }
