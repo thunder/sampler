@@ -147,7 +147,7 @@ class FieldData {
       return $data;
     }
 
-    $data['histogram'] = $this->histogram($fieldDefinition, $entityTypeId);
+    $data['histogram'] = $this->histogramData($fieldDefinition, $entityTypeId);
 
     return $data;
   }
@@ -161,7 +161,7 @@ class FieldData {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function histogram() {
+  protected function histogramData() {
     $fieldDefinition = $this->fieldDefinition;
     $entityTypeId = $this->entityTypeId;
 
