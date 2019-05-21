@@ -2,9 +2,7 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\FieldData;
 use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
@@ -23,25 +21,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class BaseFields extends SamplerBase {
 
   /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The entity field manager service.
    *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
 
   /**
    * The field data service.
@@ -67,21 +51,15 @@ class BaseFields extends SamplerBase {
    *   The plugin implementation definition.
    * @param \Drupal\sampler\GroupMapping $group_mapping
    *   The group mapping service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
-   * @param \Drupal\Core\Database\Connection $connection
-   *   The database connection.
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, FieldData $fieldData) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityFieldManagerInterface $entityFieldManager, FieldData $fieldData) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
-    $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
-    $this->connection = $connection;
     $this->fieldData = $fieldData;
   }
 
@@ -94,15 +72,16 @@ class BaseFields extends SamplerBase {
       $plugin_id,
       $plugin_definition,
       $container->get('sampler.group_mapping'),
-      $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
-      $container->get('database'),
       $container->get('sampler.field_data')
     );
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect() {
     /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
@@ -113,13 +92,7 @@ class BaseFields extends SamplerBase {
         $this->collectedData[$fieldType] = [];
       }
 
-      $fieldData = $this->fieldData->defaultFieldData($fieldDefinition);
-
-      if (in_array($fieldDefinition->getType(), ['entity_reference', 'entity_reference_revisions'])) {
-        $fieldData = array_merge($fieldData, $this->fieldData->entityReferenceFieldData($fieldDefinition, $this->entityTypeId()));
-      }
-
-      $this->collectedData[$fieldType] = $fieldData;
+      $this->collectedData[$fieldType] = $this->fieldData->collect($fieldDefinition, $this->entityTypeId());
     }
 
     return $this->collectedData;
