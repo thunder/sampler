@@ -6,7 +6,6 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\field\FieldConfigInterface;
 use Drupal\sampler\FieldData;
 use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
@@ -111,7 +110,7 @@ class Bundle extends SamplerBase {
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
       $container->get('database'),
-      $container->get('sampler.field.data')
+      $container->get('sampler.field_data')
     );
   }
 
@@ -130,8 +129,6 @@ class Bundle extends SamplerBase {
     $bundles = array_keys($this->bundleInfo->getBundleInfo($entityTypeId));
 
     $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
-
-    $this->fieldData->anonymize($this->anonymize);
 
     foreach ($bundles as $bundle) {
       $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $bundle);

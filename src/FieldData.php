@@ -6,7 +6,6 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\sampler\Traits\GroupedDataTrait;
 
 /**
  * The FieldData class.
@@ -14,14 +13,6 @@ use Drupal\sampler\Traits\GroupedDataTrait;
  * @package Drupal\sampler
  */
 class FieldData {
-  use GroupedDataTrait;
-
-  /**
-   * Store if data should be anonymized.
-   *
-   * @var bool
-   */
-  protected $anonymize;
 
   /**
    * The entity type manager service.
@@ -29,6 +20,13 @@ class FieldData {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The group mapping service.
+   *
+   * @var \Drupal\sampler\GroupMapping
+   */
+  protected $groupMapping;
 
   /**
    * The database connection.
@@ -42,11 +40,14 @@ class FieldData {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, Connection $connection) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, GroupMapping $group_mapping, Connection $connection) {
     $this->entityTypeManager = $entityTypeManager;
+    $this->groupMapping = $group_mapping;
     $this->connection = $connection;
   }
 
@@ -95,7 +96,7 @@ class FieldData {
     $targetBundles = [];
     if (!empty($fieldDefinition->getSetting('handler_settings')[$settingName])) {
       $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->getGroupMapping($targetEntityTypeId, $bundle);
+        return $this->groupMapping->getGroupMapping($targetEntityTypeId, $bundle);
       }, array_keys($fieldDefinition->getSetting('handler_settings')[$settingName]));
     }
 
@@ -127,19 +128,6 @@ class FieldData {
     }
 
     return $data;
-  }
-
-  /**
-   * Set anonymize flag.
-   *
-   * If set to true, data used in keys will be anonymized in output.
-   * Otherwise the machine names will be printed.
-   *
-   * @param bool $anonymize
-   *   Anonymize or not.
-   */
-  public function anonymize(bool $anonymize) {
-    $this->anonymize = $anonymize;
   }
 
 }

@@ -65,10 +65,10 @@ class BaseFields extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager service.
    * @param \Drupal\sampler\GroupMapping $group_mapping
    *   The group mapping service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
    * @param \Drupal\Core\Database\Connection $connection
@@ -77,7 +77,6 @@ class BaseFields extends SamplerBase {
    *   The field data service.
    */
   public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, FieldData $fieldData) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
     parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entityTypeManager;
@@ -98,7 +97,7 @@ class BaseFields extends SamplerBase {
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('database'),
-      $container->get('sampler.field.data')
+      $container->get('sampler.field_data')
     );
   }
 
@@ -114,7 +113,6 @@ class BaseFields extends SamplerBase {
         $this->collectedData[$fieldType] = [];
       }
 
-      $this->fieldData->anonymize($this->anonymize);
       $fieldData = $this->fieldData->defaultFieldData($fieldDefinition);
 
       if (in_array($fieldDefinition->getType(), ['entity_reference', 'entity_reference_revisions'])) {
