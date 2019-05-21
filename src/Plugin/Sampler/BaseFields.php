@@ -6,6 +6,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\FieldData;
+use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -66,6 +67,8 @@ class BaseFields extends SamplerBase {
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
+   * @param \Drupal\sampler\GroupMapping $group_mapping
+   *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
    * @param \Drupal\Core\Database\Connection $connection
@@ -73,8 +76,9 @@ class BaseFields extends SamplerBase {
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, FieldData $fieldData) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, Connection $connection, FieldData $fieldData) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
@@ -90,6 +94,7 @@ class BaseFields extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('sampler.group_mapping'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('database'),

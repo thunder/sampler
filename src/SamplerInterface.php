@@ -26,17 +26,6 @@ interface SamplerInterface extends PluginInspectionInterface {
   public function key();
 
   /**
-   * Set anonymize flag.
-   *
-   * If set to true, data used in keys will be anonymized in output.
-   * Otherwise the machine names will be printed.
-   *
-   * @param bool $anonymize
-   *   Anonymize or not.
-   */
-  public function anonymize(bool $anonymize);
-
-  /**
    * Retrieve the entity type id.
    *
    * @return string
