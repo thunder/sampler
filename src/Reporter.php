@@ -38,13 +38,6 @@ class Reporter {
   protected $groupMapping;
 
   /**
-   * Store if data should be anonymized.
-   *
-   * @var bool
-   */
-  protected $anonymize = TRUE;
-
-  /**
    * Reporter constructor.
    *
    * @param \Drupal\sampler\SamplerPluginManager $sampler_plugin_manager
