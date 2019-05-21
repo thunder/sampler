@@ -65,13 +65,6 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public function anonymize(bool $anonymize) {
-    $this->groupMapping->anonymize($anonymize);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function entityTypeId() {
     return $this->pluginDefinition['entity_type_id'];
   }
