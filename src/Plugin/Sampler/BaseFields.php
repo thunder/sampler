@@ -3,6 +3,7 @@
 namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\sampler\FieldData;
 use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,6 +28,13 @@ class BaseFields extends SamplerBase {
   protected $entityFieldManager;
 
   /**
+   * The field data service.
+   *
+   * @var \Drupal\sampler\FieldData
+   */
+  protected $fieldData;
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some
@@ -45,11 +53,14 @@ class BaseFields extends SamplerBase {
    *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
+   * @param \Drupal\sampler\FieldData $fieldData
+   *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityFieldManagerInterface $entityFieldManager) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityFieldManagerInterface $entityFieldManager, FieldData $fieldData) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityFieldManager = $entityFieldManager;
+    $this->fieldData = $fieldData;
   }
 
   /**
@@ -61,16 +72,32 @@ class BaseFields extends SamplerBase {
       $plugin_id,
       $plugin_definition,
       $container->get('sampler.group_mapping'),
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('sampler.field_data')
     );
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function collect() {
-    $baseFields = array_keys($this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId()));
-    return count($baseFields);
+    $entityTypeId = $this->entityTypeId();
+
+    /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
+    foreach ($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId) as $fieldDefinition) {
+      $fieldType = $fieldDefinition->getType();
+
+      if (!isset($this->collectedData[$fieldType])) {
+        $this->collectedData[$fieldType] = [];
+      }
+
+      $this->collectedData[$fieldType][] = $this->fieldData->collect($fieldDefinition, $entityTypeId);
+    }
+
+    return $this->collectedData;
   }
 
   /**
