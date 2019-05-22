@@ -94,7 +94,7 @@ class BaseFields extends SamplerBase {
         $this->collectedData[$fieldType] = [];
       }
 
-      $this->collectedData[$fieldType] = $this->fieldData->collect($fieldDefinition, $entityTypeId);
+      $this->collectedData[$fieldType][] = $this->fieldData->collect($fieldDefinition, $entityTypeId);
     }
 
     return $this->collectedData;
