@@ -92,17 +92,17 @@ class MediaSource extends SamplerBase {
 
     foreach ($types as $name => $type) {
       if ($type->getEntityType()->getProvider() === 'media_entity') {
-        $sourceField = $type->getTypeConfiguration()['source_field'];
+        $source_configuration['source_field'] = $this->getSourceFieldIndex($type->getTypeConfiguration()['source_field'], $name);
         $source = $type->getType()->getPluginId();
       }
       else {
-        $sourceField = $type->getSource()->getSourceFieldDefinition($type)->getName();
+        $source_configuration['source_field'] = $this->getSourceFieldIndex($type->get('source_configuration')['source_field'], $name);
         $source = $type->getSource()->getPluginId();
       }
 
       $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $name);
       $this->collectedData[$mapping]['source'] = $source;
-      $this->collectedData[$mapping]['source-field-index'] = $this->getSourceFieldIndex($sourceField, $name);
+      $this->collectedData[$mapping]['source_configuration'] = $source_configuration;
     }
 
     return $this->collectedData;
