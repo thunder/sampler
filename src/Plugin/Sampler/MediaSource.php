@@ -92,11 +92,10 @@ class MediaSource extends SamplerBase {
 
     foreach ($types as $name => $type) {
       if ($type->getEntityType()->getProvider() === 'media_entity') {
-        $sourceField =
+        $sourceField = $type->getTypeConfiguration()['source_field'];
         $source = $type->getType()->getPluginId();
       }
       else {
-        /** @var \Drupal\media\MediaSourceInterface $media */
         $sourceField = $type->getSource()->getSourceFieldDefinition($type)->getName();
         $source = $type->getSource()->getPluginId();
       }
