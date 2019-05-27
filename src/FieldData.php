@@ -107,6 +107,7 @@ class FieldData {
     $fieldDefinition = $this->fieldDefinition;
 
     return [
+      'type' => $fieldDefinition->getType(),
       'required' => (bool) $fieldDefinition->isRequired(),
       'translatable' => (bool) $fieldDefinition->isTranslatable(),
       'cardinality' => $fieldDefinition->getFieldStorageDefinition()->getCardinality(),
