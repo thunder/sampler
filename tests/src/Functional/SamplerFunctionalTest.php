@@ -66,7 +66,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $userReport = $report['user'];
 
-    $this->assertCount(11, $userReport['base_fields']);
+    $this->assertCount(17, $userReport['base_fields']);
 
     // Test if the report contains the correct number of users per role.
     $this->assertEquals($numberOfRestricted, $userReport['role'][$nonEditingRid]['instances']);
@@ -109,27 +109,27 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $nodeReport = $report['node'];
 
-    $this->assertCount(9, $nodeReport['base_fields']);
+    $this->assertCount(18, $nodeReport['base_fields']);
     $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
     $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
     $nodeOneFieldsReport = $nodeReport['bundle'][$nodeTypeOne]['fields'];
     $nodeTwoFieldsReport = $nodeReport['bundle'][$nodeTypeTwo]['fields'];
 
-    $this->assertCount(2, $nodeOneFieldsReport['string']);
+    $this->assertEquals('string', $nodeOneFieldsReport[1]['type']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport[1]['required']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport[1]['translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport[1]['cardinality']);
 
-    $this->assertEquals(FALSE, $nodeOneFieldsReport['string'][0]['required']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][0]['translatable']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][0]['cardinality']);
+    $this->assertEquals('string', $nodeOneFieldsReport[3]['type']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport[3]['required']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport[3]['translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport[3]['cardinality']);
 
-    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][1]['required']);
-    $this->assertEquals(FALSE, $nodeOneFieldsReport['string'][1]['translatable']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport['string'][1]['cardinality']);
-
-    $this->assertCount(2, $nodeOneFieldsReport['entity_reference']);
-    $this->assertEquals('node', $nodeOneFieldsReport['entity_reference'][0]['target_type']);
-    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport['entity_reference'][0]['target_bundles']);
-    $this->assertEquals(['type_one'], $nodeOneFieldsReport['entity_reference'][1]['target_bundles']);
+    $this->assertEquals('entity_reference', $nodeOneFieldsReport[0]['type']);
+    $this->assertEquals('node', $nodeOneFieldsReport[0]['target_type']);
+    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport[0]['target_bundles']);
+    $this->assertEquals(['type_one'], $nodeOneFieldsReport[2]['target_bundles']);
 
     $this->assertEmpty($nodeTwoFieldsReport);
   }
@@ -154,7 +154,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $fileReport = $report['file'];
 
-    $this->assertCount(9, $fileReport['base_fields']);
+    $this->assertCount(11, $fileReport['base_fields']);
     // @todo Add a file count.
   }
 
@@ -220,8 +220,9 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $nodeReport = $report['node'];
 
-    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][0]['histogram'][2]);
-    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['entity_reference'][1]['histogram'][1]);
+    $this->assertEquals('entity_reference', $nodeReport['bundle'][$nodeTypeOne]['fields'][2]['type']);
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields'][0]['histogram'][2]);
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields'][2]['histogram'][1]);
   }
 
 }
