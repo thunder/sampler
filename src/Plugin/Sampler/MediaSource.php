@@ -91,18 +91,23 @@ class MediaSource extends SamplerBase {
     $types = $this->entityTypeManager->getStorage($bundleEntityType)->loadMultiple();
 
     foreach ($types as $name => $type) {
+      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $name);
+
       if ($type->getEntityType()->getProvider() === 'media_entity') {
-        $source_configuration['source_field'] = $this->getSourceFieldIndex($type->getTypeConfiguration()['source_field'], $name);
-        $source = $type->getType()->getPluginId();
+        $source_configuration = $type->getTypeConfiguration();
+        $pluginId = $type->getType()->getPluginId();
       }
       else {
-        $source_configuration['source_field'] = $this->getSourceFieldIndex($type->get('source_configuration')['source_field'], $name);
-        $source = $type->getSource()->getPluginId();
+        $source_configuration = $type->get('source_configuration');
+        $pluginId = $type->getSource()->getPluginId();
       }
 
-      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $name);
-      $this->collectedData[$mapping]['source'] = $source;
-      $this->collectedData[$mapping]['source_configuration'] = $source_configuration;
+      $this->collectedData[$mapping]['source'] = ['plugin_id' => $pluginId];
+
+      if (isset($source_configuration['source_field'])) {
+        $this->collectedData[$mapping]['source']['source_field_index'] = $this->getSourceFieldIndex($source_configuration['source_field'], $name);
+      }
+
     }
 
     return $this->collectedData;
