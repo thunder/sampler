@@ -145,13 +145,7 @@ class Bundle extends SamplerBase {
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
         $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
-        $fieldType = $fieldConfig->getType();
-
-        if (!isset($this->collectedData[$mapping]['fields'][$fieldType])) {
-          $this->collectedData[$mapping]['fields'][$fieldType] = [];
-        }
-
-        $this->collectedData[$mapping]['fields'][$fieldType][] = $fieldData;
+        $this->collectedData[$mapping]['fields'][] = $fieldData;
       }
     }
 
