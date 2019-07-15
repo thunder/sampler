@@ -121,32 +121,15 @@ class Bundle extends SamplerBase {
    */
   public function collect() {
     $entityTypeId = $this->entityTypeId();
-    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
-
-    $baseTable = $entityTypeDefinition->getBaseTable();
-    $bundleField = $entityTypeDefinition->getKey('bundle');
     $bundles = array_keys($this->bundleInfo->getBundleInfo($entityTypeId));
-
-    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
 
     foreach ($bundles as $bundle) {
       $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $bundle);
-      $this->collectedData[$mapping] = ['fields' => []];
 
-      $query = $this->connection->select($baseTable, 'b');
-      $query->condition($bundleField, $bundle);
-      $this->collectedData[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
-
-      $fields = array_diff_key(
-        $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
-        $baseFields
-      );
-
-      /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
-      foreach ($fields as $fieldConfig) {
-        $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
-        $this->collectedData[$mapping]['fields'][] = $fieldData;
-      }
+      $this->collectedData[$mapping] = [];
+      $this->collectedData[$mapping]['fields'] = $this->getFieldData($bundle);
+      $this->collectedData[$mapping]['instances'] = $this->getInstances($bundle);
+      $this->collectedData[$mapping]['components'] = $this->getComponents($bundle, $this->getPreferredViewMode());
     }
 
     return $this->collectedData;
@@ -157,6 +140,98 @@ class Bundle extends SamplerBase {
    */
   public function key(): string {
     return $this->getBaseId();
+  }
+
+  /**
+   * Stub function to provide a view mode.
+   *
+   * For now, this will return th default view mode. We could make this more
+   * intelligent, and maybe get the most used view mode, or the view mode with
+   * the most components.
+   *
+   * @return string
+   *   The view mode to collect components for
+   */
+  protected function getPreferredViewMode(): string {
+    return 'default';
+  }
+
+  /**
+   * Get field data from FieldData service.
+   *
+   * @param $bundle
+   *  The bundle to collect data for.
+   *
+   * @return array
+   *  The collected data.
+   *
+   * @see \Drupal\sampler\FieldData
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getFieldData($bundle): array {
+    $fieldData = [];
+    $entityTypeId = $this->entityTypeId();
+    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
+
+    $fields = array_diff_key(
+      $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
+      $baseFields
+    );
+
+    /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
+    foreach ($fields as $fieldConfig) {
+      $fieldData[] = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
+    }
+
+    return $fieldData;
+  }
+
+  /**
+   * Count number of entity instances with a given bundle.
+   *
+   * @param $bundle
+   *  The bundle to collect data for.
+   *
+   * @return int
+   *  The number of instances found.
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getInstances($bundle): int {
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
+
+    $baseTable = $entityTypeDefinition->getBaseTable();
+    $bundleField = $entityTypeDefinition->getKey('bundle');
+
+    $query = $this->connection->select($baseTable, 'b');
+    $query->condition($bundleField, $bundle);
+
+    return (integer) $query->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * Get displayed components (fields) of a given bundle for a view mode
+   *
+   * @param $bundle
+   *  The bundle to collect data for.
+   * @param $viewMode
+   *  The view mode to collect data for.
+   *
+   * @return array
+   *  The found components, given as an array of field names.
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getComponents($bundle, $viewMode) {
+    $components = [];
+
+    if ($display = $this->entityTypeManager
+      ->getStorage('entity_view_display')
+      ->load($this->entityTypeId() . '.' . $bundle . '.' . $viewMode)) {
+      $components = array_keys($display->getComponents());
+    }
+
+    return $components;
   }
 
 }
