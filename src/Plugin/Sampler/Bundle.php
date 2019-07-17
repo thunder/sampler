@@ -161,12 +161,13 @@ class Bundle extends SamplerBase {
    * Get field data from FieldData service.
    *
    * @param $bundle
-   *  The bundle to collect data for.
+   *   The bundle to collect data for.
    *
    * @return array
-   *  The collected data.
+   *   The collected data.
    *
    * @see \Drupal\sampler\FieldData
+   *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
@@ -188,10 +189,11 @@ class Bundle extends SamplerBase {
    * Count number of entity instances with a given bundle.
    *
    * @param $bundle
-   *  The bundle to collect data for.
+   *   The bundle to collect data for.
    *
    * @return int
-   *  The number of instances found.
+   *   The number of instances found.
+   *
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function getInstances($bundle): int {
@@ -207,13 +209,14 @@ class Bundle extends SamplerBase {
   }
 
   /**
-   * Get displayed components (fields) of a given bundle for a view mode
+   * Get displayed components (fields) of a given bundle for a view mode.
    *
    * @param $bundle
-   *  The bundle to collect data for.
+   *   The bundle to collect data for.
    *
    * @return array
-   *  The found components, given as an array of field names.
+   *   The found components, given as an array of field names.
+   *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
@@ -223,16 +226,16 @@ class Bundle extends SamplerBase {
 
     foreach ($displays as $display) {
       if ($displayConfig = $this->entityTypeManager
-          ->getStorage('entity_view_display')
-          ->load($this->entityTypeId() . '.' . $bundle . '.' . $display)) {
+        ->getStorage('entity_view_display')
+        ->load($this->entityTypeId() . '.' . $bundle . '.' . $display)) {
 
         $entityTypeId = $this->entityTypeId();
         $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
         $fieldNames = array_keys($displayConfig->getComponents());
 
         $indexes = ['base_field' => [], 'field' => []];
-        foreach($fieldNames as $fieldName) {
-          if (isset($baseFields[$fieldName])){
+        foreach ($fieldNames as $fieldName) {
+          if (isset($baseFields[$fieldName])) {
             $indexes['base_field'][] = $this->getFieldIndex($entityTypeId, $fieldName, $this->entityFieldManager);
           }
           else {
