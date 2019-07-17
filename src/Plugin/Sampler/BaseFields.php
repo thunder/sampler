@@ -4,7 +4,7 @@ namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\sampler\FieldData;
-use Drupal\sampler\GroupMapping;
+use Drupal\sampler\Mapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,15 +49,15 @@ class BaseFields extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityFieldManagerInterface $entityFieldManager, FieldData $fieldData) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, Mapping $mapping, EntityFieldManagerInterface $entityFieldManager, FieldData $fieldData) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $mapping);
 
     $this->entityFieldManager = $entityFieldManager;
     $this->fieldData = $fieldData;
@@ -71,7 +71,7 @@ class BaseFields extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('sampler.group_mapping'),
+      $container->get('sampler.mapping'),
       $container->get('entity_field.manager'),
       $container->get('sampler.field_data')
     );

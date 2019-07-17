@@ -33,21 +33,21 @@ class Reporter {
   /**
    * The group mapping service.
    *
-   * @var \Drupal\sampler\GroupMapping
+   * @var \Drupal\sampler\Mapping
    */
-  protected $groupMapping;
+  protected $mapping;
 
   /**
    * Reporter constructor.
    *
    * @param \Drupal\sampler\SamplerPluginManager $sampler_plugin_manager
    *   The group count manager service.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    */
-  public function __construct(SamplerPluginManager $sampler_plugin_manager, GroupMapping $group_mapping) {
+  public function __construct(SamplerPluginManager $sampler_plugin_manager, Mapping $mapping) {
     $this->samplerPluginManager = $sampler_plugin_manager;
-    $this->groupMapping = $group_mapping;
+    $this->mapping = $mapping;
   }
 
   /**
@@ -122,7 +122,7 @@ class Reporter {
    * @return $this
    */
   public function anonymize(bool $anonymize): Reporter {
-    $this->groupMapping->anonymize($anonymize);
+    $this->mapping->anonymize($anonymize);
 
     return $this;
   }

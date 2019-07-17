@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\FieldData;
-use Drupal\sampler\GroupMapping;
+use Drupal\sampler\Mapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -73,7 +73,7 @@ class Bundle extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
@@ -86,8 +86,8 @@ class Bundle extends SamplerBase {
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, Mapping $mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
@@ -104,7 +104,7 @@ class Bundle extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('sampler.group_mapping'),
+      $container->get('sampler.mapping'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
@@ -130,7 +130,7 @@ class Bundle extends SamplerBase {
     $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
 
     foreach ($bundles as $bundle) {
-      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $bundle);
+      $mapping = $this->mapping->getMapping($entityTypeId, $bundle);
       $this->collectedData[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');

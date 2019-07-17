@@ -3,11 +3,11 @@
 namespace Drupal\sampler;
 
 /**
- * The GroupMapping service class.
+ * The Mapping service class.
  *
  * @package Drupal\sampler
  */
-class GroupMapping {
+class Mapping {
 
   /**
    * Store if data should be anonymized.
@@ -21,12 +21,12 @@ class GroupMapping {
    *
    * @var string[]
    */
-  protected $groupMapping = [];
+  protected $mapping = [];
 
   /**
-   * Prefix for anonymized group names.
+   * Prefix for anonymized names.
    */
-  private const GROUP_PREFIX = 'group-';
+  private const MAPPING_PREFIX = 'mapping-';
 
   /**
    * Get mapped value of a group.
@@ -39,21 +39,21 @@ class GroupMapping {
    * @return string
    *   The mapped value.
    */
-  public function getGroupMapping(string $entityTypeId, string $group) {
+  public function getMapping(string $entityTypeId, string $group) {
     if ($this->anonymize === FALSE) {
       return $group;
     }
 
-    if (!isset($this->groupMapping[$entityTypeId])) {
-      $this->groupMapping[$entityTypeId] = [$group => self::GROUP_PREFIX . 0];
-      return $this->groupMapping[$entityTypeId][$group];
+    if (!isset($this->mapping[$entityTypeId])) {
+      $this->mapping[$entityTypeId] = [$group => self::MAPPING_PREFIX . 0];
+      return $this->mapping[$entityTypeId][$group];
     }
 
-    if (!isset($this->groupMapping[$entityTypeId][$group])) {
-      $this->groupMapping[$entityTypeId][$group] = self::GROUP_PREFIX . count($this->groupMapping[$entityTypeId]);
+    if (!isset($this->mapping[$entityTypeId][$group])) {
+      $this->mapping[$entityTypeId][$group] = self::MAPPING_PREFIX . count($this->mapping[$entityTypeId]);
     }
 
-    return $this->groupMapping[$entityTypeId][$group];
+    return $this->mapping[$entityTypeId][$group];
   }
 
   /**
