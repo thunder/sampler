@@ -160,7 +160,7 @@ class Bundle extends SamplerBase {
   /**
    * Get field data from FieldData service.
    *
-   * @param $bundle
+   * @param string $bundle
    *   The bundle to collect data for.
    *
    * @return array
@@ -171,7 +171,7 @@ class Bundle extends SamplerBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function getFieldData($bundle): array {
+  protected function getFieldData(string $bundle): array {
     $fieldData = [];
     $entityTypeId = $this->entityTypeId();
 
@@ -188,7 +188,7 @@ class Bundle extends SamplerBase {
   /**
    * Count number of entity instances with a given bundle.
    *
-   * @param $bundle
+   * @param string $bundle
    *   The bundle to collect data for.
    *
    * @return int
@@ -196,7 +196,7 @@ class Bundle extends SamplerBase {
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function getInstances($bundle): int {
+  protected function getInstances(string $bundle): int {
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($this->entityTypeId());
 
     $baseTable = $entityTypeDefinition->getBaseTable();
@@ -211,7 +211,7 @@ class Bundle extends SamplerBase {
   /**
    * Get displayed components (fields) of a given bundle for a view mode.
    *
-   * @param $bundle
+   * @param string $bundle
    *   The bundle to collect data for.
    *
    * @return array
@@ -220,7 +220,7 @@ class Bundle extends SamplerBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function getComponents($bundle) {
+  protected function getComponents(string $bundle) {
     $components = [];
     $displays = array_keys($this->entityDisplayRepository->getViewModeOptionsByBundle($this->entityTypeId(), $bundle));
 
