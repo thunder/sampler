@@ -3,10 +3,12 @@
 namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\FieldData;
+use Drupal\sampler\FieldHelperTrait;
 use Drupal\sampler\GroupMapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,6 +24,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Bundle extends SamplerBase {
+
+  use FieldHelperTrait;
 
   /**
    * The entity type manager service.
@@ -59,6 +63,13 @@ class Bundle extends SamplerBase {
   protected $fieldData;
 
   /**
+   * The entity display repository service.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $entityDisplayRepository;
+
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some
@@ -79,21 +90,24 @@ class Bundle extends SamplerBase {
    *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager service.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundleInfo
    *   The bundle information service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
+   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entityDisplayRepository
+   *   The entity display repository service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundleInfo, Connection $connection, FieldData $fieldData, EntityDisplayRepositoryInterface $entityDisplayRepository) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
-    $this->bundleInfo = $bundle_info;
+    $this->bundleInfo = $bundleInfo;
     $this->connection = $connection;
     $this->fieldData = $fieldData;
+    $this->entityDisplayRepository = $entityDisplayRepository;
   }
 
   /**
@@ -109,7 +123,8 @@ class Bundle extends SamplerBase {
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
       $container->get('database'),
-      $container->get('sampler.field_data')
+      $container->get('sampler.field_data'),
+      $container->get('entity_display.repository')
     );
   }
 
@@ -129,7 +144,7 @@ class Bundle extends SamplerBase {
       $this->collectedData[$mapping] = [];
       $this->collectedData[$mapping]['fields'] = $this->getFieldData($bundle);
       $this->collectedData[$mapping]['instances'] = $this->getInstances($bundle);
-      $this->collectedData[$mapping]['components'] = $this->getComponents($bundle, $this->getPreferredViewMode());
+      $this->collectedData[$mapping]['components'] = $this->getComponents($bundle);
     }
 
     return $this->collectedData;
@@ -140,20 +155,6 @@ class Bundle extends SamplerBase {
    */
   public function key(): string {
     return $this->getBaseId();
-  }
-
-  /**
-   * Stub function to provide a view mode.
-   *
-   * For now, this will return th default view mode. We could make this more
-   * intelligent, and maybe get the most used view mode, or the view mode with
-   * the most components.
-   *
-   * @return string
-   *   The view mode to collect components for
-   */
-  protected function getPreferredViewMode(): string {
-    return 'default';
   }
 
   /**
@@ -172,16 +173,12 @@ class Bundle extends SamplerBase {
   protected function getFieldData($bundle): array {
     $fieldData = [];
     $entityTypeId = $this->entityTypeId();
-    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
 
-    $fields = array_diff_key(
-      $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
-      $baseFields
-    );
+    $fields = $this->getNonBaseFieldDefinitions($entityTypeId, $bundle, $this->entityFieldManager);
 
     /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
     foreach ($fields as $fieldConfig) {
-      $fieldData[] = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
+      $fieldData[] = $this->fieldData->collect($fieldConfig, $entityTypeId);
     }
 
     return $fieldData;
@@ -214,21 +211,37 @@ class Bundle extends SamplerBase {
    *
    * @param $bundle
    *  The bundle to collect data for.
-   * @param $viewMode
-   *  The view mode to collect data for.
    *
    * @return array
    *  The found components, given as an array of field names.
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function getComponents($bundle, $viewMode) {
+  protected function getComponents($bundle) {
     $components = [];
+    $displays = array_keys($this->entityDisplayRepository->getViewModeOptionsByBundle($this->entityTypeId(), $bundle));
 
-    if ($display = $this->entityTypeManager
-      ->getStorage('entity_view_display')
-      ->load($this->entityTypeId() . '.' . $bundle . '.' . $viewMode)) {
-      $components = array_keys($display->getComponents());
+    foreach ($displays as $display) {
+      if ($displayConfig = $this->entityTypeManager
+          ->getStorage('entity_view_display')
+          ->load($this->entityTypeId() . '.' . $bundle . '.' . $display)) {
+
+        $entityTypeId = $this->entityTypeId();
+        $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
+        $fieldNames = array_keys($displayConfig->getComponents());
+
+        $indexes = ['base_field' => [], 'field' => []];
+        foreach($fieldNames as $fieldName) {
+          if (isset($baseFields[$fieldName])){
+            $indexes['base_field'][] = $this->getFieldIndex($entityTypeId, $fieldName, $this->entityFieldManager);
+          }
+          else {
+            $indexes['field'][] = $this->getFieldIndex($entityTypeId, $fieldName, $this->entityFieldManager, $bundle);
+          }
+        }
+
+        $components[] = array_filter($indexes);
+      }
     }
 
     return $components;
