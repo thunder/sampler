@@ -26,34 +26,42 @@ class Mapping {
   /**
    * Prefix for anonymized names.
    */
-  private const MAPPING_PREFIX = 'mapping-';
+  private const MAPPING_PREFIX = 'mapped-';
 
   /**
-   * Get mapped value of a group.
+   * Get mapping of a value.
    *
-   * @param string $entityTypeId
-   *   The grouped entity.
-   * @param string $group
-   *   The group to map.
+   * Values, that should be mapped for anonymization, can be mapped to an
+   * arbitrary value. All mappings are namespaced, to have different mappings
+   * for a value in different contexts.
+   * Examples would be mapping of bundle or field names names for different
+   * entities or roles for users.
+   * The mapped value will always be constructed out of the MAPPING_PREFIX and a
+   * consecutively increasing number.
+   *
+   * @param string $nameSpace
+   *   The namespace of the mapping.
+   * @param string $value
+   *   The value to map.
    *
    * @return string
    *   The mapped value.
    */
-  public function getMapping(string $entityTypeId, string $group) {
+  public function getMapping(string $nameSpace, string $value) {
     if ($this->anonymize === FALSE) {
-      return $group;
+      return $value;
     }
 
-    if (!isset($this->mapping[$entityTypeId])) {
-      $this->mapping[$entityTypeId] = [$group => self::MAPPING_PREFIX . 0];
-      return $this->mapping[$entityTypeId][$group];
+    if (!isset($this->mapping[$nameSpace])) {
+      $this->mapping[$nameSpace] = [$value => self::MAPPING_PREFIX. 0];
+      return $this->mapping[$nameSpace][$value];
     }
 
-    if (!isset($this->mapping[$entityTypeId][$group])) {
-      $this->mapping[$entityTypeId][$group] = self::MAPPING_PREFIX . count($this->mapping[$entityTypeId]);
+    if (!isset($this->mapping[$nameSpace][$value])) {
+      $this->mapping[$nameSpace][$value] = self::MAPPING_PREFIX . count($this->mapping[$nameSpace]);
     }
 
-    return $this->mapping[$entityTypeId][$group];
+    return $this->mapping[$nameSpace][$value];
   }
 
   /**
