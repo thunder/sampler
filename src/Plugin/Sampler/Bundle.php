@@ -130,7 +130,7 @@ class Bundle extends SamplerBase {
     $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
 
     foreach ($bundles as $bundle) {
-      $mapping = $this->mapping->getMapping($entityTypeId, $bundle);
+      $mapping = $this->mapping->getBundleMapping($entityTypeId, $bundle);
       $this->collectedData[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
@@ -145,7 +145,7 @@ class Bundle extends SamplerBase {
       /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
       foreach ($fields as $fieldConfig) {
         $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
-        $this->collectedData[$mapping]['fields'][] = $fieldData;
+        $this->collectedData[$mapping]['fields'][$this->mapping->getFieldMapping($entityTypeId, $fieldConfig->getName())] = $fieldData;
       }
     }
 

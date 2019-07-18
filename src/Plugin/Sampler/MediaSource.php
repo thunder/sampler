@@ -91,7 +91,7 @@ class MediaSource extends SamplerBase {
     $types = $this->entityTypeManager->getStorage($bundleEntityType)->loadMultiple();
 
     foreach ($types as $name => $type) {
-      $mapping = $this->mapping->getMapping($entityTypeId, $name);
+      $mapping = $this->mapping->getBundleMapping($entityTypeId, $name);
 
       if ($type->getEntityType()->getProvider() === 'media_entity') {
         $source_configuration = $type->getTypeConfiguration();

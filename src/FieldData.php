@@ -136,7 +136,7 @@ class FieldData {
     $targetBundles = [];
     if (!empty($fieldDefinition->getSetting('handler_settings')[$settingName])) {
       $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->mapping->getMapping($targetEntityTypeId, $bundle);
+        return $this->mapping->getBundleMapping($targetEntityTypeId, $bundle);
       }, array_keys($fieldDefinition->getSetting('handler_settings')[$settingName]));
     }
 

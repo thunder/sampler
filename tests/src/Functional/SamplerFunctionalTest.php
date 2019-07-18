@@ -25,7 +25,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     'taxonomy',
     // Enable contact as it provides a fieldable entity with no storage.
     'contact',
-    // Enbable file as it provides a fieldable entity with SQL storage but no
+    // Enable file as it provides a fieldable entity with SQL storage but no
     // bundles.
     'file',
     'sampler_test',
@@ -99,6 +99,11 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $numberOfNodesTypeOne = 2;
     $numberOfNodesTypeTwo = 3;
 
+    $stringFieldNotRequiredTranslatable = 'field_one';
+    $stringFieldRequiredNotTranslatable = 'field_two';
+    $entityReferenceFieldSingleTarget = 'field_three';
+    $entityReferenceFieldMultipleTargets = 'field_four';
+
     $this->createNodesOfType($nodeTypeOne, $numberOfNodesTypeOne, 1);
     $this->createNodesOfType($nodeTypeTwo, $numberOfNodesTypeTwo, 1);
 
@@ -116,20 +121,20 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $nodeOneFieldsReport = $nodeReport['bundle'][$nodeTypeOne]['fields'];
     $nodeTwoFieldsReport = $nodeReport['bundle'][$nodeTypeTwo]['fields'];
 
-    $this->assertEquals('string', $nodeOneFieldsReport[1]['type']);
-    $this->assertEquals(FALSE, $nodeOneFieldsReport[1]['required']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport[1]['translatable']);
-    $this->assertEquals(1, $nodeOneFieldsReport[1]['cardinality']);
+    $this->assertEquals('string', $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['type']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['required']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['cardinality']);
 
-    $this->assertEquals('string', $nodeOneFieldsReport[3]['type']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport[3]['required']);
-    $this->assertEquals(FALSE, $nodeOneFieldsReport[3]['translatable']);
-    $this->assertEquals(1, $nodeOneFieldsReport[3]['cardinality']);
+    $this->assertEquals('string', $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['type']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['required']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['cardinality']);
 
-    $this->assertEquals('entity_reference', $nodeOneFieldsReport[0]['type']);
-    $this->assertEquals('node', $nodeOneFieldsReport[0]['target_type']);
-    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport[0]['target_bundles']);
-    $this->assertEquals(['type_one'], $nodeOneFieldsReport[2]['target_bundles']);
+    $this->assertEquals(['type_one'], $nodeOneFieldsReport[$entityReferenceFieldSingleTarget]['target_bundles']);
+    $this->assertEquals('entity_reference', $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['type']);
+    $this->assertEquals('node', $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['target_type']);
+    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['target_bundles']);
 
     $this->assertEmpty($nodeTwoFieldsReport);
   }

@@ -87,7 +87,7 @@ class User extends SamplerBase {
     $taxonomyEditingRoles = $this->getEditorRoles('taxonomy');
 
     foreach ($roles as $role) {
-      $mapping = $this->mapping->getMapping($this->entityTypeId(), $role);
+      $mapping = $this->mapping->getUserRoleMapping($role);
 
       $query = $this->connection->select('user__roles', 'b');
       $query->condition('roles_target_id', $role);
@@ -125,7 +125,7 @@ class User extends SamplerBase {
 
     $roleNames = array_map(
       function ($role) {
-        return $this->mapping->getMapping($this->entityTypeId(), $role);
+        return $this->mapping->getUserRoleMapping($role);
       },
       array_keys($roles)
     );

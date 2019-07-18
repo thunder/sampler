@@ -88,7 +88,7 @@ class BaseFields extends SamplerBase {
 
     /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
     foreach ($this->entityFieldManager->getBaseFieldDefinitions($entityTypeId) as $fieldDefinition) {
-      $this->collectedData[] = $this->fieldData->collect($fieldDefinition, $entityTypeId);
+      $this->collectedData[$this->mapping->getFieldMapping($entityTypeId, $fieldDefinition->getName())] = $this->fieldData->collect($fieldDefinition, $entityTypeId);
     }
 
     return $this->collectedData;
