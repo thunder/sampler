@@ -105,37 +105,12 @@ class MediaSource extends SamplerBase {
       $this->collectedData[$mapping]['source'] = ['plugin_id' => $pluginId];
 
       if (isset($source_configuration['source_field'])) {
-        $this->collectedData[$mapping]['source']['source_field_index'] = $this->getSourceFieldIndex($source_configuration['source_field'], $name);
+        $this->collectedData[$mapping]['source']['source_field'] = $this->mapping->getFieldMapping($entityTypeId, $source_configuration['source_field']);
       }
 
     }
 
     return $this->collectedData;
-  }
-
-  /**
-   * Retrieve the index of the source field.
-   *
-   * This implementation mimics the generation of fields in Bundle.php.
-   *
-   * @param string $sourceField
-   *   The source field name.
-   * @param string $bundle
-   *   The media bundle.
-   *
-   * @return int
-   *   The index of the source field
-   */
-  protected function getSourceFieldIndex(string $sourceField, string $bundle) {
-    $entityTypeId = $this->entityTypeId();
-    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
-
-    $fields = array_diff_key(
-      $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
-      $baseFields
-    );
-
-    return array_search($sourceField, array_keys($fields));
   }
 
   /**
