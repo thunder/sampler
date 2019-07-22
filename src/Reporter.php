@@ -43,7 +43,7 @@ class Reporter {
    * @param \Drupal\sampler\SamplerPluginManager $sampler_plugin_manager
    *   The group count manager service.
    * @param \Drupal\sampler\Mapping $mapping
-   *   The group mapping service.
+   *   The mapping service.
    */
   public function __construct(SamplerPluginManager $sampler_plugin_manager, Mapping $mapping) {
     $this->samplerPluginManager = $sampler_plugin_manager;
@@ -122,7 +122,7 @@ class Reporter {
    * @return $this
    */
   public function anonymize(bool $anonymize): Reporter {
-    $this->mapping->anonymize($anonymize);
+    $this->mapping->enableMapping($anonymize);
 
     return $this;
   }

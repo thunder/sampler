@@ -2,19 +2,28 @@
 
 namespace Drupal\sampler;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+
 /**
- * The Mapping service class.
+ * The Mapping class.
  *
  * @package Drupal\sampler
  */
 class Mapping {
 
   /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Store if data should be anonymized.
    *
    * @var bool
    */
-  protected $anonymize;
+  protected $enabled = TRUE;
 
   /**
    * Mapping of group names to integer values.
@@ -22,6 +31,32 @@ class Mapping {
    * @var string[]
    */
   protected $mapping = [];
+
+  /**
+   * Prefix for mapped entity bundles.
+   */
+  protected const BUNDLE_PREFIX = 'bundle';
+
+  /**
+   * Prefix for mapped user roles.
+   */
+  protected const ROLE_PREFIX = 'role';
+
+  /**
+   * Prefix for mapped field names.
+   */
+  protected const FIELD_PREFIX = 'field';
+
+  /**
+   * FieldData constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager service.
+   *   The database connection.
+   */
+  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
+    $this->entityTypeManager = $entityTypeManager;
+  }
 
   /**
    * Map a bundle of an entity to an anonymized value.
@@ -39,7 +74,7 @@ class Mapping {
    *   The mapped role name.
    */
   public function getBundleMapping(string $entityTypeId, string $bundle) {
-    return $this->getMapping($entityTypeId, $bundle, 'bundle');
+    return $this->getMapping($entityTypeId, $bundle, self::BUNDLE_PREFIX);
   }
 
   /**
@@ -52,7 +87,7 @@ class Mapping {
    *   The mapped role name.
    */
   public function getUserRoleMapping(string $role) {
-    return $this->getMapping('role', $role, 'role');
+    return $this->getMapping('role', $role, self::ROLE_PREFIX);
   }
 
   /**
@@ -69,9 +104,28 @@ class Mapping {
    *
    * @return string
    *   The mapped field name.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function getFieldMapping(string $entityTypeId, $fieldName) {
-    return $this->getMapping($entityTypeId, $fieldName, 'field');
+    if ($this->enabled === FALSE) {
+      return $fieldName;
+    }
+
+    $definition = $this->entityTypeManager->getDefinition($entityTypeId);
+
+    // If field is an entity key, use the key name as mapping.
+    if ($keyName = array_search($fieldName, $definition->getKeys())) {
+      return $keyName;
+    }
+
+    // Special handling of taxonomy term parent field, we need to know this
+    // field name, to be able to correctly create terms.
+    if ($entityTypeId === 'taxonomy_term' && $fieldName === 'parent') {
+      return $fieldName;
+    }
+
+    return $this->getMapping($entityTypeId, $fieldName, self::FIELD_PREFIX);
   }
 
   /**
@@ -96,7 +150,7 @@ class Mapping {
    *   The mapped value.
    */
   private function getMapping(string $nameSpace, string $value, $prefix) {
-    if ($this->anonymize === FALSE) {
+    if ($this->enabled === FALSE) {
       return $value;
     }
 
@@ -113,16 +167,16 @@ class Mapping {
   }
 
   /**
-   * Set anonymize flag.
+   * Set enabled flag.
    *
-   * If set to true, data used in keys will be anonymized in output.
-   * Otherwise the machine names will be printed.
+   * Mapping is only enabled, if this is set to true.
+   * Otherwise the original value will be return.
    *
-   * @param bool $anonymize
-   *   Anonymize or not.
+   * @param bool $enableMapping
+   *   Enable mapping or not.
    */
-  public function anonymize(bool $anonymize) {
-    $this->anonymize = $anonymize;
+  public function enableMapping(bool $enableMapping) {
+    $this->enabled = $enableMapping;
   }
 
 }

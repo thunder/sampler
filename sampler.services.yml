@@ -10,3 +10,4 @@ services:
     arguments: ['@entity_type.manager', '@sampler.mapping', '@database']
   sampler.mapping:
     class: Drupal\sampler\Mapping
+    arguments: ['@entity_type.manager']
