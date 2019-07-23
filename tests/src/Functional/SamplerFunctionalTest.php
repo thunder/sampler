@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\sampler\Functional;
 
-use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\TestFileCreationTrait;
 
@@ -66,8 +65,6 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $userReport = $report['user'];
 
-    $this->assertCount(17, $userReport['base_fields']);
-
     // Test if the report contains the correct number of users per role.
     $this->assertEquals($numberOfRestricted, $userReport['role'][$nonEditingRid]['instances']);
     $this->assertEquals($numberOfNodeEditors, $userReport['role'][$nodeEditingRid]['instances']);
@@ -114,7 +111,6 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $nodeReport = $report['node'];
 
-    $this->assertCount(18, $nodeReport['base_fields']);
     $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
     $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
@@ -137,30 +133,6 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['target_bundles']);
 
     $this->assertEmpty($nodeTwoFieldsReport);
-  }
-
-  /**
-   * Test sampling of file data.
-   */
-  public function testFileDataSampling() {
-    // Create test file.
-    $this->generateFile('test', 64, 10, 'text');
-    $file = File::create([
-      'uri' => 'public://test.txt',
-      'filename' => 'test.txt',
-    ]);
-    $file->setPermanent();
-    $file->save();
-
-    $report = $this->container->get('sampler.reporter')
-      ->anonymize(TRUE)
-      ->collect()
-      ->getReport();
-
-    $fileReport = $report['file'];
-
-    $this->assertCount(11, $fileReport['base_fields']);
-    // @todo Add a file count.
   }
 
   /**

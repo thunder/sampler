@@ -5,6 +5,7 @@ namespace Drupal\sampler;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
@@ -206,7 +207,7 @@ class FieldData {
    *   Field is base field.
    */
   protected function isBaseField() {
-    return ($this->fieldDefinition instanceof BaseFieldDefinition);
+    return ($this->fieldDefinition instanceof BaseFieldDefinition  || $this->fieldDefinition instanceof BaseFieldOverride);
   }
 
 }

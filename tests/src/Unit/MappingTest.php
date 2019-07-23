@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\sampler\Unit;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\sampler\Mapping;
 use Drupal\Tests\UnitTestCase;
 
@@ -12,64 +11,6 @@ use Drupal\Tests\UnitTestCase;
  * @group media
  */
 class MappingTest extends UnitTestCase {
-
-  /**
-   * Array of entity type managers used for testing.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject[]
-   */
-  protected $entityTypeManager = [];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-
-    // Entity IDs and corresponding entity keys to create
-    // EntityTypeManagerInterface::getDefinition() mocks for.
-    $entityKeysPerId = [
-      'node' => [
-        'id' => 'nid',
-        'revision' => 'vid',
-        'bundle' => 'type',
-        'label' => 'title',
-        'langcode' => 'langcode',
-        'uuid' => 'uuid',
-        'published' => 'status',
-        'owner' => 'uid',
-        'default_langcode' => 'default_langcode',
-        'revision_translation_affected' => 'revision_translation_affected',
-      ],
-      'taxonomy_term' => [
-        'id' => 'tid',
-        'revision' => 'revision_id',
-        'bundle' => 'vid',
-        'label' => 'name',
-        'langcode' => 'langcode',
-        'uuid' => 'uuid',
-        'published' => 'status',
-        'default_langcode' => 'default_langcode',
-        'revision_translation_affected' => 'revision_translation_affected',
-      ],
-      // Actual mocking is currently needed in ::testGetFieldMapping() for node
-      // and taxonomy_term only. other entity IDs are not tested for keys.
-      'default' => [],
-    ];
-
-    foreach ($entityKeysPerId as $entityTypeId => $entityKeys) {
-      $entityType = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
-      $entityType->expects($this->any())
-        ->method('getKeys')
-        ->will($this->returnValue($entityKeys));
-
-      $this->entityTypeManager[$entityTypeId] = $this->createMock(EntityTypeManagerInterface::class);
-      $this->entityTypeManager[$entityTypeId]->expects($this->any())
-        ->method('getDefinition')
-        ->with($entityTypeId)
-        ->will($this->returnValue($entityType));
-    }
-
-  }
 
   /**
    * Data provider for testGetBundleMapping().
@@ -125,7 +66,7 @@ class MappingTest extends UnitTestCase {
    */
   public function testGetBundleMapping(bool $enableMapping, array $testData) {
     foreach ($testData as $entityTypeId => $bundleMappings) {
-      $mapping = $this->getMapping($entityTypeId);
+      $mapping = new Mapping();
       $mapping->enableMapping($enableMapping);
 
       foreach ($bundleMappings as $value => $mappedValue) {
@@ -179,7 +120,7 @@ class MappingTest extends UnitTestCase {
    * @dataProvider providerGetUserRoleMapping
    */
   public function testGetUserRoleMapping(bool $enableMapping, array $testData) {
-    $mapping = $this->getMapping('user');
+    $mapping = new Mapping();
     $mapping->enableMapping($enableMapping);
 
     foreach ($testData as $role => $mappedValue) {
@@ -202,34 +143,15 @@ class MappingTest extends UnitTestCase {
       'fields are mapped' => [
         TRUE,
         [
-          'node' => [
-            'field_something' => 'field-0',
-            'field_body' => 'field-1',
-            // Special treatment of keys.
-            'nid' => 'id',
-            'vid' => 'revision',
-            'type' => 'bundle',
-            'title' => 'label',
-            'status' => 'published',
-            'uid' => 'owner',
-            'default_langcode' => 'default_langcode',
-          ],
-          // Taxonomy terms have special handling for parent.
-          'taxonomy_term' => [
-            'parent' => 'parent',
-          ],
+          'field_something' => 'field-0',
+          'field_body' => 'field-1',
         ],
       ],
       'fields are not mapped' => [
         FALSE,
         [
-          'node' => [
-            'field_something' => 'field_something',
-            'field_body' => 'field_body',
-            'title' => 'title',
-            'type' => 'type',
-            'nid' => 'nid',
-          ],
+          'field_something' => 'field_something',
+          'field_body' => 'field_body',
         ],
       ],
     ];
@@ -241,7 +163,7 @@ class MappingTest extends UnitTestCase {
    * @param bool $enableMapping
    *   Enable mapping.
    * @param array $testData
-   *   The test data. An array with input roles as keys and mapped values as
+   *   The test data. An array with input fields as keys and mapped values as
    *   values.
    *
    * @covers ::getFieldMapping
@@ -251,33 +173,15 @@ class MappingTest extends UnitTestCase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function testGetFieldMapping(bool $enableMapping, array $testData) {
-    foreach ($testData as $entityTypeId => $bundleMappings) {
-      $mapping = $this->getMapping($entityTypeId);
-      $mapping->enableMapping($enableMapping);
+    $entityTypeId = 'node';
+    $mapping = new Mapping();
+    $mapping->enableMapping($enableMapping);
 
-      foreach ($bundleMappings as $value => $mappedValue) {
-        $this->assertSame($mappedValue, $mapping->getFieldMapping($entityTypeId, $value));
-        // Multiple invocations must return the same mappings.
-        $this->assertSame($mappedValue, $mapping->getFieldMapping($entityTypeId, $value));
-      }
+    foreach ($testData as $value => $mappedValue) {
+      $this->assertSame($mappedValue, $mapping->getFieldMapping($entityTypeId, $value));
+      // Multiple invocations must return the same mappings.
+      $this->assertSame($mappedValue, $mapping->getFieldMapping($entityTypeId, $value));
     }
-  }
-
-  /**
-   * Get a mocked mapping service for a specific entity type.
-   *
-   * @param string $entityTypeId
-   *   The entity type to get the mocked mapping for.
-   *
-   * @return \Drupal\sampler\Mapping
-   *   The mokked mapping service.
-   */
-  protected function getMapping(string $entityTypeId) {
-    if (empty($this->entityTypeManager[$entityTypeId])) {
-      return new Mapping($this->entityTypeManager['default']);
-    }
-
-    return new Mapping($this->entityTypeManager[$entityTypeId]);
   }
 
 }

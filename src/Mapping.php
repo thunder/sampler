@@ -2,21 +2,12 @@
 
 namespace Drupal\sampler;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-
 /**
  * The Mapping class.
  *
  * @package Drupal\sampler
  */
 class Mapping {
-
-  /**
-   * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
 
   /**
    * Store if data should be anonymized.
@@ -46,17 +37,6 @@ class Mapping {
    * Prefix for mapped field names.
    */
   protected const FIELD_PREFIX = 'field';
-
-  /**
-   * FieldData constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager service.
-   *   The database connection.
-   */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
-    $this->entityTypeManager = $entityTypeManager;
-  }
 
   /**
    * Map a bundle of an entity to an anonymized value.
@@ -108,23 +88,6 @@ class Mapping {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function getFieldMapping(string $entityTypeId, $fieldName) {
-    if ($this->enabled === FALSE) {
-      return $fieldName;
-    }
-
-    $definition = $this->entityTypeManager->getDefinition($entityTypeId);
-
-    // If field is an entity key, use the key name as mapping.
-    if ($keyName = array_search($fieldName, $definition->getKeys())) {
-      return $keyName;
-    }
-
-    // Special handling of taxonomy term parent field, we need to know this
-    // field name, to be able to correctly create terms.
-    if ($entityTypeId === 'taxonomy_term' && $fieldName === 'parent') {
-      return $fieldName;
-    }
-
     return $this->getMapping($entityTypeId, $fieldName, self::FIELD_PREFIX);
   }
 
