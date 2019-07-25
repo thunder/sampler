@@ -102,21 +102,22 @@ class Mapping {
    * The mapped value will always be constructed out of the prefix and a
    * consecutively increasing number.
    *
-   * @param string $nameSpace
-   *   The namespace of the mapping.
+   * @param string $nameSpaceSuffix
+   *   Custom part of namespace of the mapping.
    * @param string $value
    *   The value to map.
    * @param string $prefix
-   *   The prefix.
+   *   The prefix, used for namespace and mapped value.
    *
    * @return string
    *   The mapped value.
    */
-  private function getMapping(string $nameSpace, string $value, $prefix) {
+  private function getMapping(string $nameSpaceSuffix, string $value, $prefix) {
     if ($this->enabled === FALSE) {
       return $value;
     }
 
+    $nameSpace = $prefix . $nameSpaceSuffix;
     if (!isset($this->mapping[$nameSpace])) {
       $this->mapping[$nameSpace] = [$value => $prefix . '-' . 0];
       return $this->mapping[$nameSpace][$value];

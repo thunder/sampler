@@ -202,4 +202,39 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['field_three']['histogram'][1]);
   }
 
+  /**
+   * Test anonymized sampling.
+   *
+   * If this start to fail, it could be, that this is caused by internal Drupal
+   * changes. This tests assumes, that Drupal API always returns bundles,
+   * fields and roles in the same order.
+   */
+  public function testAnonymizedSampling() {
+    $nodeTypeOne = 'type_three';
+
+    $this->createNodesOfType($nodeTypeOne, 1, 1);
+
+    $report = $this->container->get('sampler.reporter')
+      ->anonymize(TRUE)
+      ->collect()
+      ->getReport();
+
+    // basic bundle and field mapping check.
+    $this->assertArrayHasKey('bundle-0', $report['node']['bundle']);
+    $this->assertArrayHasKey('field-0', $report['node']['bundle']['bundle-0']['fields']);
+    $this->assertArrayHasKey('field-1', $report['node']['bundle']['bundle-0']['fields']);
+    $this->assertArrayHasKey('field-2', $report['node']['bundle']['bundle-0']['fields']);
+    $this->assertArrayHasKey('field-3', $report['node']['bundle']['bundle-0']['fields']);
+    $this->assertArrayNotHasKey('field-4', $report['node']['bundle']['bundle-0']['fields']);
+
+    // bundle-2 has field-0 in common with bundle0.
+    // field-4 is in bundle-2 only.
+    $this->assertArrayHasKey('bundle-2', $report['node']['bundle']);
+    $this->assertArrayHasKey('field-0', $report['node']['bundle']['bundle-2']['fields']);
+    $this->assertArrayHasKey('field-4', $report['node']['bundle']['bundle-2']['fields']);
+
+    //Check, if roles are mapped.
+    $this->assertArrayHasKey('role-0', $report['user']['role']);
+  }
+
 }

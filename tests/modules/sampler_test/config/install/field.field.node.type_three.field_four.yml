@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_four
+    - node.type.type_one
+    - node.type.type_two
+    - node.type.type_three
+id: node.type_one.field_four
+field_name: field_four
+entity_type: node
+bundle: type_three
+label: 'Field four'
+description: 'Node type three, field four'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      type_one: type_one
+      type_two: type_two
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: article
+field_type: entity_reference
