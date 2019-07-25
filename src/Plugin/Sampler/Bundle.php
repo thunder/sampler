@@ -142,7 +142,7 @@ class Bundle extends SamplerBase {
 
       /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig */
       foreach ($fields as $fieldName => $fieldConfig) {
-        if ($fieldConfig instanceof BaseFieldDefinition  || $fieldConfig instanceof BaseFieldOverride) {
+        if ($this->isBaseField($fieldConfig)) {
           continue;
         }
 

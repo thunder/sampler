@@ -8,7 +8,7 @@ use Drupal\Tests\UnitTestCase;
 /**
  * @coversDefaultClass \Drupal\sampler\Mapping
  *
- * @group media
+ * @group sampler
  */
 class MappingTest extends UnitTestCase {
 
