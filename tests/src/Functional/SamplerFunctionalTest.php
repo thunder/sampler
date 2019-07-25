@@ -219,7 +219,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
       ->collect()
       ->getReport();
 
-    // basic bundle and field mapping check.
+    // Basic bundle and field mapping check.
     $this->assertArrayHasKey('bundle_0', $report['node']['bundle']);
     $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_0']['fields']);
     $this->assertArrayHasKey('field_1', $report['node']['bundle']['bundle_0']['fields']);
@@ -233,7 +233,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_2']['fields']);
     $this->assertArrayHasKey('field_4', $report['node']['bundle']['bundle_2']['fields']);
 
-    //Check, if roles are mapped.
+    // Check, if roles are mapped.
     $this->assertArrayHasKey('role_0', $report['user']['role']);
   }
 
