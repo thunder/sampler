@@ -220,21 +220,21 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
       ->getReport();
 
     // basic bundle and field mapping check.
-    $this->assertArrayHasKey('bundle-0', $report['node']['bundle']);
-    $this->assertArrayHasKey('field-0', $report['node']['bundle']['bundle-0']['fields']);
-    $this->assertArrayHasKey('field-1', $report['node']['bundle']['bundle-0']['fields']);
-    $this->assertArrayHasKey('field-2', $report['node']['bundle']['bundle-0']['fields']);
-    $this->assertArrayHasKey('field-3', $report['node']['bundle']['bundle-0']['fields']);
-    $this->assertArrayNotHasKey('field-4', $report['node']['bundle']['bundle-0']['fields']);
+    $this->assertArrayHasKey('bundle_0', $report['node']['bundle']);
+    $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_1', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_2', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_3', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayNotHasKey('field_4', $report['node']['bundle']['bundle_0']['fields']);
 
-    // bundle-2 has field-0 in common with bundle0.
-    // field-4 is in bundle-2 only.
-    $this->assertArrayHasKey('bundle-2', $report['node']['bundle']);
-    $this->assertArrayHasKey('field-0', $report['node']['bundle']['bundle-2']['fields']);
-    $this->assertArrayHasKey('field-4', $report['node']['bundle']['bundle-2']['fields']);
+    // bundle_2 has field_0 in common with bundle0.
+    // field_4 is in bundle_2 only.
+    $this->assertArrayHasKey('bundle_2', $report['node']['bundle']);
+    $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_2']['fields']);
+    $this->assertArrayHasKey('field_4', $report['node']['bundle']['bundle_2']['fields']);
 
     //Check, if roles are mapped.
-    $this->assertArrayHasKey('role-0', $report['user']['role']);
+    $this->assertArrayHasKey('role_0', $report['user']['role']);
   }
 
 }

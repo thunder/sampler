@@ -26,16 +26,16 @@ class MappingTest extends UnitTestCase {
         TRUE,
         [
           'node' => [
-            'something' => 'bundle-0',
-            'article' => 'bundle-1',
-            'page' => 'bundle-2',
+            'something' => 'bundle_0',
+            'article' => 'bundle_1',
+            'page' => 'bundle_2',
           ],
           // Different entities should start with bundle-0 again.
           'media' => [
-            'image' => 'bundle-0',
-            'video' => 'bundle-1',
+            'image' => 'bundle_0',
+            'video' => 'bundle_1',
           // Same bundle as node has, but different mapping.
-            'something' => 'bundle-2',
+            'something' => 'bundle_2',
           ],
         ],
       ],
@@ -90,9 +90,9 @@ class MappingTest extends UnitTestCase {
       'roles are mapped' => [
         TRUE,
         [
-          'editor' => 'role-0',
-          'administrator' => 'role-1',
-          'something' => 'role-2',
+          'editor' => 'role_0',
+          'administrator' => 'role_1',
+          'something' => 'role_2',
         ],
       ],
       'roles are not mapped' => [
@@ -143,8 +143,8 @@ class MappingTest extends UnitTestCase {
       'fields are mapped' => [
         TRUE,
         [
-          'field_something' => 'field-0',
-          'field_body' => 'field-1',
+          'field_something' => 'field_0',
+          'field_body' => 'field_1',
         ],
       ],
       'fields are not mapped' => [
