@@ -119,12 +119,12 @@ class Mapping {
 
     $nameSpace = $prefix . $nameSpaceSuffix;
     if (!isset($this->mapping[$nameSpace])) {
-      $this->mapping[$nameSpace] = [$value => $prefix . '-' . 0];
+      $this->mapping[$nameSpace] = [$value => $prefix . '_' . 0];
       return $this->mapping[$nameSpace][$value];
     }
 
     if (!isset($this->mapping[$nameSpace][$value])) {
-      $this->mapping[$nameSpace][$value] = $prefix . '-' . count($this->mapping[$nameSpace]);
+      $this->mapping[$nameSpace][$value] = $prefix . '_' . count($this->mapping[$nameSpace]);
     }
 
     return $this->mapping[$nameSpace][$value];
