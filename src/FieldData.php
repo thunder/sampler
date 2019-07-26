@@ -5,6 +5,7 @@ namespace Drupal\sampler;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
@@ -24,9 +25,9 @@ class FieldData {
   /**
    * The group mapping service.
    *
-   * @var \Drupal\sampler\GroupMapping
+   * @var \Drupal\sampler\Mapping
    */
-  protected $groupMapping;
+  protected $mapping;
 
   /**
    * The database connection.
@@ -54,14 +55,14 @@ class FieldData {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, GroupMapping $group_mapping, Connection $connection) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, Mapping $mapping, Connection $connection) {
     $this->entityTypeManager = $entityTypeManager;
-    $this->groupMapping = $group_mapping;
+    $this->mapping = $mapping;
     $this->connection = $connection;
   }
 
@@ -136,7 +137,7 @@ class FieldData {
     $targetBundles = [];
     if (!empty($fieldDefinition->getSetting('handler_settings')[$settingName])) {
       $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->groupMapping->getGroupMapping($targetEntityTypeId, $bundle);
+        return $this->mapping->getBundleMapping($targetEntityTypeId, $bundle);
       }, array_keys($fieldDefinition->getSetting('handler_settings')[$settingName]));
     }
 
@@ -206,7 +207,7 @@ class FieldData {
    *   Field is base field.
    */
   protected function isBaseField() {
-    return ($this->fieldDefinition instanceof BaseFieldDefinition);
+    return ($this->fieldDefinition instanceof BaseFieldDefinition  || $this->fieldDefinition instanceof BaseFieldOverride);
   }
 
 }

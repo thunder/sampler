@@ -4,7 +4,7 @@ namespace Drupal\sampler\Plugin\Sampler;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\sampler\GroupMapping;
+use Drupal\sampler\Mapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,15 +49,15 @@ class MediaSource extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, Mapping $mapping, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $mapping);
 
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
@@ -71,7 +71,7 @@ class MediaSource extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('sampler.group_mapping'),
+      $container->get('sampler.mapping'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager')
     );
@@ -91,7 +91,7 @@ class MediaSource extends SamplerBase {
     $types = $this->entityTypeManager->getStorage($bundleEntityType)->loadMultiple();
 
     foreach ($types as $name => $type) {
-      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $name);
+      $mapping = $this->mapping->getBundleMapping($entityTypeId, $name);
 
       if ($type->getEntityType()->getProvider() === 'media_entity') {
         $source_configuration = $type->getTypeConfiguration();
@@ -105,37 +105,12 @@ class MediaSource extends SamplerBase {
       $this->collectedData[$mapping]['source'] = ['plugin_id' => $pluginId];
 
       if (isset($source_configuration['source_field'])) {
-        $this->collectedData[$mapping]['source']['source_field_index'] = $this->getSourceFieldIndex($source_configuration['source_field'], $name);
+        $this->collectedData[$mapping]['source']['source_field'] = $this->mapping->getFieldMapping($entityTypeId, $source_configuration['source_field']);
       }
 
     }
 
     return $this->collectedData;
-  }
-
-  /**
-   * Retrieve the index of the source field.
-   *
-   * This implementation mimics the generation of fields in Bundle.php.
-   *
-   * @param string $sourceField
-   *   The source field name.
-   * @param string $bundle
-   *   The media bundle.
-   *
-   * @return int
-   *   The index of the source field
-   */
-  protected function getSourceFieldIndex(string $sourceField, string $bundle) {
-    $entityTypeId = $this->entityTypeId();
-    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
-
-    $fields = array_diff_key(
-      $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
-      $baseFields
-    );
-
-    return array_search($sourceField, array_keys($fields));
   }
 
   /**

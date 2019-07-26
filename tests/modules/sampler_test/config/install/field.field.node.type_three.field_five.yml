@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_five
+    - node.type.type_three
+id: node.type_one.field_five
+field_name: field_five
+entity_type: node
+bundle: type_three
+label: 'Field five'
+description: 'Field five'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      type_one: type_three
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: article
+field_type: entity_reference

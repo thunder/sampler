@@ -14,9 +14,9 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
   /**
    * The group mapping service.
    *
-   * @var \Drupal\sampler\GroupMapping
+   * @var \Drupal\sampler\Mapping
    */
-  protected $groupMapping;
+  protected $mapping;
 
   /**
    * The collected data.
@@ -37,17 +37,17 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    */
   public function __construct(
     array $configuration,
     string $plugin_id,
     $plugin_definition,
-    GroupMapping $group_mapping
+    Mapping $mapping
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->groupMapping = $group_mapping;
+    $this->mapping = $mapping;
   }
 
   /**
@@ -58,7 +58,7 @@ abstract class SamplerBase extends PluginBase implements ContainerFactoryPluginI
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('sampler.group_mapping')
+      $container->get('sampler.mapping')
     );
   }
 

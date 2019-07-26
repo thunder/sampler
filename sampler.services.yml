@@ -1,12 +1,12 @@
 services:
   sampler.reporter:
     class: Drupal\sampler\Reporter
-    arguments: ['@plugin.manager.sampler', '@sampler.group_mapping']
+    arguments: ['@plugin.manager.sampler', '@sampler.mapping']
   plugin.manager.sampler:
     class: Drupal\sampler\SamplerPluginManager
     parent: default_plugin_manager
   sampler.field_data:
     class: Drupal\sampler\FieldData
-    arguments: ['@entity_type.manager', '@sampler.group_mapping', '@database']
-  sampler.group_mapping:
-    class: Drupal\sampler\GroupMapping
+    arguments: ['@entity_type.manager', '@sampler.mapping', '@database']
+  sampler.mapping:
+    class: Drupal\sampler\Mapping

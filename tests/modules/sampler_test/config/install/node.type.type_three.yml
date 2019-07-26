@@ -1,0 +1,10 @@
+langcode: en
+status: true
+third_party_settings: {}
+name: Node type three
+type: type_three
+description: 'Node type three.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: true

@@ -6,8 +6,11 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\Entity\BaseFieldOverride;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\sampler\FieldData;
-use Drupal\sampler\GroupMapping;
+use Drupal\sampler\Mapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -73,7 +76,7 @@ class Bundle extends SamplerBase {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\sampler\GroupMapping $group_mapping
+   * @param \Drupal\sampler\Mapping $mapping
    *   The group mapping service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
@@ -86,8 +89,8 @@ class Bundle extends SamplerBase {
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, GroupMapping $group_mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $group_mapping);
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, Mapping $mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $mapping);
 
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
@@ -104,7 +107,7 @@ class Bundle extends SamplerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('sampler.group_mapping'),
+      $container->get('sampler.mapping'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
@@ -127,25 +130,24 @@ class Bundle extends SamplerBase {
     $bundleField = $entityTypeDefinition->getKey('bundle');
     $bundles = array_keys($this->bundleInfo->getBundleInfo($entityTypeId));
 
-    $baseFields = $this->entityFieldManager->getBaseFieldDefinitions($entityTypeId);
-
     foreach ($bundles as $bundle) {
-      $mapping = $this->groupMapping->getGroupMapping($entityTypeId, $bundle);
+      $mapping = $this->mapping->getBundleMapping($entityTypeId, $bundle);
       $this->collectedData[$mapping] = ['fields' => []];
 
       $query = $this->connection->select($baseTable, 'b');
       $query->condition($bundleField, $bundle);
       $this->collectedData[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
-      $fields = array_diff_key(
-        $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle),
-        $baseFields
-      );
+      $fields = $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle);
 
-      /** @var \Drupal\Core\Field\FieldConfigInterface $fieldConfig */
-      foreach ($fields as $fieldConfig) {
+      /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig */
+      foreach ($fields as $fieldName => $fieldConfig) {
+        if ($this->isBaseField($fieldConfig)) {
+          continue;
+        }
+
         $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
-        $this->collectedData[$mapping]['fields'][] = $fieldData;
+        $this->collectedData[$mapping]['fields'][$this->mapping->getFieldMapping($entityTypeId, $fieldName)] = $fieldData;
       }
     }
 
@@ -157,6 +159,19 @@ class Bundle extends SamplerBase {
    */
   public function key(): string {
     return $this->getBaseId();
+  }
+
+  /**
+   * Check, if current field is an entity base field.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig
+   *   The field config.
+   *
+   * @return bool
+   *   Field is base field.
+   */
+  protected function isBaseField(FieldDefinitionInterface $fieldConfig) {
+    return ($fieldConfig instanceof BaseFieldDefinition || $fieldConfig instanceof BaseFieldOverride);
   }
 
 }

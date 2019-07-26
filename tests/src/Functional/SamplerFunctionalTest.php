@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\sampler\Functional;
 
-use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\TestFileCreationTrait;
 
@@ -25,7 +24,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     'taxonomy',
     // Enable contact as it provides a fieldable entity with no storage.
     'contact',
-    // Enbable file as it provides a fieldable entity with SQL storage but no
+    // Enable file as it provides a fieldable entity with SQL storage but no
     // bundles.
     'file',
     'sampler_test',
@@ -66,8 +65,6 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $userReport = $report['user'];
 
-    $this->assertCount(17, $userReport['base_fields']);
-
     // Test if the report contains the correct number of users per role.
     $this->assertEquals($numberOfRestricted, $userReport['role'][$nonEditingRid]['instances']);
     $this->assertEquals($numberOfNodeEditors, $userReport['role'][$nodeEditingRid]['instances']);
@@ -99,6 +96,11 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $numberOfNodesTypeOne = 2;
     $numberOfNodesTypeTwo = 3;
 
+    $stringFieldNotRequiredTranslatable = 'field_one';
+    $stringFieldRequiredNotTranslatable = 'field_two';
+    $entityReferenceFieldSingleTarget = 'field_three';
+    $entityReferenceFieldMultipleTargets = 'field_four';
+
     $this->createNodesOfType($nodeTypeOne, $numberOfNodesTypeOne, 1);
     $this->createNodesOfType($nodeTypeTwo, $numberOfNodesTypeTwo, 1);
 
@@ -109,53 +111,28 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $nodeReport = $report['node'];
 
-    $this->assertCount(18, $nodeReport['base_fields']);
     $this->assertEquals($numberOfNodesTypeOne, $nodeReport['bundle'][$nodeTypeOne]['instances']);
     $this->assertEquals($numberOfNodesTypeTwo, $nodeReport['bundle'][$nodeTypeTwo]['instances']);
 
     $nodeOneFieldsReport = $nodeReport['bundle'][$nodeTypeOne]['fields'];
     $nodeTwoFieldsReport = $nodeReport['bundle'][$nodeTypeTwo]['fields'];
 
-    $this->assertEquals('string', $nodeOneFieldsReport[1]['type']);
-    $this->assertEquals(FALSE, $nodeOneFieldsReport[1]['required']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport[1]['translatable']);
-    $this->assertEquals(1, $nodeOneFieldsReport[1]['cardinality']);
+    $this->assertEquals('string', $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['type']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['required']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport[$stringFieldNotRequiredTranslatable]['cardinality']);
 
-    $this->assertEquals('string', $nodeOneFieldsReport[3]['type']);
-    $this->assertEquals(TRUE, $nodeOneFieldsReport[3]['required']);
-    $this->assertEquals(FALSE, $nodeOneFieldsReport[3]['translatable']);
-    $this->assertEquals(1, $nodeOneFieldsReport[3]['cardinality']);
+    $this->assertEquals('string', $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['type']);
+    $this->assertEquals(TRUE, $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['required']);
+    $this->assertEquals(FALSE, $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['translatable']);
+    $this->assertEquals(1, $nodeOneFieldsReport[$stringFieldRequiredNotTranslatable]['cardinality']);
 
-    $this->assertEquals('entity_reference', $nodeOneFieldsReport[0]['type']);
-    $this->assertEquals('node', $nodeOneFieldsReport[0]['target_type']);
-    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport[0]['target_bundles']);
-    $this->assertEquals(['type_one'], $nodeOneFieldsReport[2]['target_bundles']);
+    $this->assertEquals(['type_one'], $nodeOneFieldsReport[$entityReferenceFieldSingleTarget]['target_bundles']);
+    $this->assertEquals('entity_reference', $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['type']);
+    $this->assertEquals('node', $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['target_type']);
+    $this->assertEquals(['type_one', 'type_two'], $nodeOneFieldsReport[$entityReferenceFieldMultipleTargets]['target_bundles']);
 
     $this->assertEmpty($nodeTwoFieldsReport);
-  }
-
-  /**
-   * Test sampling of file data.
-   */
-  public function testFileDataSampling() {
-    // Create test file.
-    $this->generateFile('test', 64, 10, 'text');
-    $file = File::create([
-      'uri' => 'public://test.txt',
-      'filename' => 'test.txt',
-    ]);
-    $file->setPermanent();
-    $file->save();
-
-    $report = $this->container->get('sampler.reporter')
-      ->anonymize(TRUE)
-      ->collect()
-      ->getReport();
-
-    $fileReport = $report['file'];
-
-    $this->assertCount(11, $fileReport['base_fields']);
-    // @todo Add a file count.
   }
 
   /**
@@ -220,9 +197,44 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     $nodeReport = $report['node'];
 
-    $this->assertEquals('entity_reference', $nodeReport['bundle'][$nodeTypeOne]['fields'][2]['type']);
-    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields'][0]['histogram'][2]);
-    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields'][2]['histogram'][1]);
+    $this->assertEquals('entity_reference', $nodeReport['bundle'][$nodeTypeOne]['fields']['field_three']['type']);
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['field_four']['histogram'][2]);
+    $this->assertEquals(1, $nodeReport['bundle'][$nodeTypeOne]['fields']['field_three']['histogram'][1]);
+  }
+
+  /**
+   * Test anonymized sampling.
+   *
+   * If this start to fail, it could be, that this is caused by internal Drupal
+   * changes. This tests assumes, that Drupal API always returns bundles,
+   * fields and roles in the same order.
+   */
+  public function testAnonymizedSampling() {
+    $nodeTypeOne = 'type_three';
+
+    $this->createNodesOfType($nodeTypeOne, 1, 1);
+
+    $report = $this->container->get('sampler.reporter')
+      ->anonymize(TRUE)
+      ->collect()
+      ->getReport();
+
+    // Basic bundle and field mapping check.
+    $this->assertArrayHasKey('bundle_0', $report['node']['bundle']);
+    $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_1', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_2', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_3', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayNotHasKey('field_4', $report['node']['bundle']['bundle_0']['fields']);
+
+    // bundle_2 has field_0 in common with bundle0.
+    // field_4 is in bundle_2 only.
+    $this->assertArrayHasKey('bundle_2', $report['node']['bundle']);
+    $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_2']['fields']);
+    $this->assertArrayHasKey('field_4', $report['node']['bundle']['bundle_2']['fields']);
+
+    // Check, if roles are mapped.
+    $this->assertArrayHasKey('role_0', $report['user']['role']);
   }
 
 }
