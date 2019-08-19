@@ -3,6 +3,7 @@
 namespace Drupal\sampler;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\Entity\BaseFieldOverride;
@@ -51,6 +52,13 @@ class FieldData {
   protected $entityTypeId;
 
   /**
+   * The bundle information service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $bundleInfo;
+
+  /**
    * FieldData constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
@@ -59,11 +67,14 @@ class FieldData {
    *   The group mapping service.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundleInfo
+   *   The bundle information service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, Mapping $mapping, Connection $connection) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, Mapping $mapping, Connection $connection, EntityTypeBundleInfoInterface $bundleInfo) {
     $this->entityTypeManager = $entityTypeManager;
     $this->mapping = $mapping;
     $this->connection = $connection;
+    $this->bundleInfo = $bundleInfo;
   }
 
   /**
@@ -134,17 +145,30 @@ class FieldData {
     $targetEntityTypeId = $fieldDefinition->getSetting('target_type');
     $settingName = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
 
-    $targetBundles = [];
-    if (!empty($fieldDefinition->getSetting('handler_settings')[$settingName])) {
-      $targetBundles = array_map(function ($bundle) use ($targetEntityTypeId) {
-        return $this->mapping->getBundleMapping($targetEntityTypeId, $bundle);
-      }, array_keys($fieldDefinition->getSetting('handler_settings')[$settingName]));
+    $installedBundles = $this->bundleInfo->getBundleInfo($targetEntityTypeId);
+    $targetBundles = $fieldDefinition->getSetting('handler_settings')[$settingName];
+
+    if (!empty($targetBundles)) {
+      // Handler settings could contain target bundles, that have been deleted.
+      // We have to filter out bundles, that are not installed anymore.
+      $targetBundles = array_intersect_key($targetBundles, $installedBundles);
+    }
+
+    $mappedTargetBundles = [];
+    if (!empty($targetBundles)) {
+      // Map target bundles for anonymization.
+      $mappedTargetBundles = array_map(
+        function ($bundle) use ($targetEntityTypeId) {
+          return $this->mapping->getBundleMapping($targetEntityTypeId, $bundle);
+        },
+        array_keys($targetBundles)
+      );
     }
 
     // Data common for all entity references.
     $data = [
       'target_type' => $targetEntityTypeId,
-      'target_bundles' => $targetBundles,
+      'target_bundles' => $mappedTargetBundles,
     ];
 
     if ($this->isBaseField()) {

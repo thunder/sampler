@@ -7,6 +7,6 @@ services:
     parent: default_plugin_manager
   sampler.field_data:
     class: Drupal\sampler\FieldData
-    arguments: ['@entity_type.manager', '@sampler.mapping', '@database']
+    arguments: ['@entity_type.manager', '@sampler.mapping', '@database', '@entity_type.bundle.info']
   sampler.mapping:
     class: Drupal\sampler\Mapping
