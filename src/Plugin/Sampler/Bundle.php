@@ -67,8 +67,8 @@ class Bundle extends SamplerBase {
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-
   protected $samplerSettings;
+
   /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
