@@ -16,7 +16,7 @@ class BaseFieldDeriver extends SamplerDeriverBase {
     // Reset the discovered definitions.
     $this->derivatives = [];
 
-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
+    foreach ($this->getSupportedEntityTypeDefinitions() as $entity_type) {
       if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
         $this->derivatives[$entity_type->id()] = $base_plugin_definition;
         $this->derivatives[$entity_type->id()]['admin_label'] = $this->t('@entity_type base fields', ['@entity_type' => $entity_type->getLabel()]);

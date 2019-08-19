@@ -2,6 +2,7 @@
 
 namespace Drupal\sampler\Plugin\Sampler;
 
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
@@ -62,6 +63,12 @@ class Bundle extends SamplerBase {
   protected $fieldData;
 
   /**
+   * The sampler settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $samplerSettings;
+  /**
    * Overrides \Drupal\Component\Plugin\PluginBase::__construct().
    *
    * Overrides the construction of sampler count plugins to inject some
@@ -88,8 +95,10 @@ class Bundle extends SamplerBase {
    *   The database connection.
    * @param \Drupal\sampler\FieldData $fieldData
    *   The field data service.
+   * @param \Drupal\Core\Config\ImmutableConfig $samplerSettings
+   *   The sampler settings.
    */
-  public function __construct(array $configuration, string $plugin_id, $plugin_definition, Mapping $mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData) {
+  public function __construct(array $configuration, string $plugin_id, $plugin_definition, Mapping $mapping, EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $bundle_info, Connection $connection, FieldData $fieldData, ImmutableConfig $samplerSettings) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $mapping);
 
     $this->entityTypeManager = $entityTypeManager;
@@ -97,6 +106,7 @@ class Bundle extends SamplerBase {
     $this->bundleInfo = $bundle_info;
     $this->connection = $connection;
     $this->fieldData = $fieldData;
+    $this->samplerSettings = $samplerSettings;
   }
 
   /**
@@ -112,7 +122,8 @@ class Bundle extends SamplerBase {
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
       $container->get('database'),
-      $container->get('sampler.field_data')
+      $container->get('sampler.field_data'),
+      $container->get('config.factory')->get('sampler.settings')
     );
   }
 
@@ -138,7 +149,7 @@ class Bundle extends SamplerBase {
       $query->condition($bundleField, $bundle);
       $this->collectedData[$mapping]['instances'] = (integer) $query->countQuery()->execute()->fetchField();
 
-      $fields = $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle);
+      $fields = $this->getSupportedFieldDefinitions($entityTypeId, $bundle);
 
       /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig */
       foreach ($fields as $fieldName => $fieldConfig) {
@@ -172,6 +183,34 @@ class Bundle extends SamplerBase {
    */
   protected function isBaseField(FieldDefinitionInterface $fieldConfig) {
     return ($fieldConfig instanceof BaseFieldDefinition || $fieldConfig instanceof BaseFieldOverride);
+  }
+
+  /**
+   * Get all supported field definitions.
+   *
+   * Filters all fields that have a not supported type. Supported types are
+   * defined in sampler settings.
+   *
+   * @param string $entityTypeId
+   *   The entity type.
+   * @param string $bundle
+   *   The bundle.
+   *
+   * @return array
+   *   The field definitions.
+   */
+  protected function getSupportedFieldDefinitions(string $entityTypeId, string $bundle) {
+    $fieldDefinitions = $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle);
+    $supportedFieldTypes = array_flip($this->samplerSettings->get('supported_field_types'));
+
+    $supportedFields = [];
+    foreach ($fieldDefinitions as $fieldName => $fieldConfig) {
+      if (isset($supportedFieldTypes[$fieldConfig->getType()])) {
+        $supportedFields[$fieldName] = $fieldConfig;
+      }
+    }
+
+    return $supportedFields;
   }
 
 }
