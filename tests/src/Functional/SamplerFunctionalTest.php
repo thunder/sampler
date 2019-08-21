@@ -3,6 +3,7 @@
 namespace Drupal\Tests\sampler\Functional;
 
 use Drupal\node\Entity\Node;
+use Drupal\sampler\Plugin\Sampler\Bundle;
 use Drupal\Tests\TestFileCreationTrait;
 
 /**
@@ -235,6 +236,90 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
 
     // Check, if roles are mapped.
     $this->assertArrayHasKey('role_0', $report['user']['role']);
+  }
+
+  /**
+   * Test filtering of unsupported entity types.
+   *
+   * The plugin manager should return plugins for configured entity types only.
+   */
+  public function testFilterUnsupportedEntityTypes() {
+    $pluginManager = $this->container->get('plugin.manager.sampler');
+    $definitions = $pluginManager->getDefinitions();
+
+    $this->assertArrayHasKey('revision:node', $definitions);
+    $this->assertArrayHasKey('bundle:node', $definitions);
+
+    $samplerSettings = $this->container->get('config.factory')->getEditable('sampler.settings');
+    $supportedEntityTypes = $samplerSettings->get('supported_entity_types');
+
+    // Remove node from supported entities.
+    $supportedEntityTypes = array_filter($supportedEntityTypes, function ($entityType) {
+      return $entityType !== 'node';
+    });
+
+    $samplerSettings->set('supported_entity_types', $supportedEntityTypes)->save();
+
+    $pluginManager->clearCachedDefinitions();
+    $definitions = $pluginManager->getDefinitions();
+
+    $this->assertArrayNotHasKey('revision:node', $definitions);
+    $this->assertArrayNotHasKey('bundle:node', $definitions);
+  }
+
+  /**
+   * Test filtering of unsupported field types.
+   */
+  public function testFilterUnsupportedFieldTypes() {
+    // Disable mapping for simplified tests.
+    $this->container->get('sampler.mapping')->enableMapping(FALSE);
+
+    $pluginId = 'bundle:node';
+
+    $fieldData = $this->getFieldData($pluginId, 'type_one');
+    $stringField = 'field_one';
+
+    $this->assertArrayHasKey($stringField, $fieldData);
+    $this->assertEquals('string', $fieldData[$stringField]['type']);
+
+    $samplerSettings = $this->container->get('config.factory')->getEditable('sampler.settings');
+    $supportedEntityTypes = $samplerSettings->get('supported_field_types');
+
+    // Remove string from supported field types.
+    $supportedEntityTypes = array_filter($supportedEntityTypes, function ($entityType) {
+      return $entityType !== 'string';
+    });
+
+    $samplerSettings->set('supported_field_types', $supportedEntityTypes)->save();
+
+    $fieldData = $this->getFieldData($pluginId, 'type_one');
+
+    $this->assertArrayNotHasKey($stringField, $fieldData);
+  }
+
+  /**
+   * Get field data for a bundle.
+   *
+   * @param string $pluginId
+   *   The plugin id.
+   * @param string $bundle
+   *   The Bundle to collect data for.
+   *
+   * @return array
+   *   The collected field data.
+   */
+  protected function getFieldData(string $pluginId, string $bundle) {
+    $pluginManager = $this->container->get('plugin.manager.sampler');
+
+    $pluginManager->clearCachedDefinitions();
+    $definitions = $pluginManager->getDefinitions();
+
+    $bundleData = Bundle::create($this->container, [], $pluginId,
+      $definitions[$pluginId]);
+
+    $data = $bundleData->collect();
+
+    return $data[$bundle]['fields'];
   }
 
 }
