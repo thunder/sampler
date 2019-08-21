@@ -153,7 +153,8 @@ class FieldData {
       $installedParagraphTypes = array_keys($this->bundleInfo->getBundleInfo($targetEntityTypeId));
       $targetBundles = array_diff($installedParagraphTypes, $targetBundles);
     }
-
+    print $entityTypeId . ' ' . $targetEntityTypeId . PHP_EOL;
+    print_r($targetBundles);
     // Map target bundles for anonymization.
     $mappedTargetBundles = array_map(
       function ($bundle) use ($targetEntityTypeId) {
