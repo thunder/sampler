@@ -143,27 +143,24 @@ class FieldData {
     $entityTypeId = $this->entityTypeId;
 
     $targetEntityTypeId = $fieldDefinition->getSetting('target_type');
-    $settingName = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
+    $handlerSettings = $fieldDefinition->getSetting('handler_settings');
 
-    $installedBundles = $this->bundleInfo->getBundleInfo($targetEntityTypeId);
-    $targetBundles = $fieldDefinition->getSetting('handler_settings')[$settingName];
+    $targetBundles = array_keys($handlerSettings['target_bundles'] ?: []);
 
-    if (!empty($targetBundles)) {
-      // Handler settings could contain target bundles, that have been deleted.
-      // We have to filter out bundles, that are not installed anymore.
-      $targetBundles = array_intersect_key($targetBundles, $installedBundles);
+    // Paragraph reference fields can have a "negate" option set, if this is
+    // case, the selected types are not allowed, but all other installed types.
+    if ($targetEntityTypeId === 'paragraph' && $handlerSettings['negate']) {
+      $installedParagraphTypes = array_keys($this->bundleInfo->getBundleInfo($targetEntityTypeId));
+      $targetBundles = array_diff($installedParagraphTypes, $targetBundles);
     }
 
-    $mappedTargetBundles = [];
-    if (!empty($targetBundles)) {
-      // Map target bundles for anonymization.
-      $mappedTargetBundles = array_map(
-        function ($bundle) use ($targetEntityTypeId) {
-          return $this->mapping->getBundleMapping($targetEntityTypeId, $bundle);
-        },
-        array_keys($targetBundles)
-      );
-    }
+    // Map target bundles for anonymization.
+    $mappedTargetBundles = array_map(
+      function ($bundle) use ($targetEntityTypeId) {
+        return $this->mapping->getBundleMapping($targetEntityTypeId, $bundle);
+      },
+      $targetBundles
+    );
 
     // Data common for all entity references.
     $data = [

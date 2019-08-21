@@ -19,6 +19,7 @@ settings:
   handler_settings:
     target_bundles:
       type_one: type_one
+      type_two: type_two
     sort:
       field: _none
     auto_create: false
