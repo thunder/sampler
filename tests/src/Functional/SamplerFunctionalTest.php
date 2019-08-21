@@ -3,7 +3,6 @@
 namespace Drupal\Tests\sampler\Functional;
 
 use Drupal\node\Entity\Node;
-use Drupal\sampler\Plugin\Sampler\Bundle;
 use Drupal\Tests\TestFileCreationTrait;
 
 /**
