@@ -311,7 +311,7 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $pluginManager = $this->container->get('plugin.manager.sampler');
 
     $pluginManager->clearCachedDefinitions();
-    $bundleDataPlugin = $pluginManager->getInstance($pluginId);
+    $bundleDataPlugin = $pluginManager->createInstance($pluginId);
 
     $data = $bundleDataPlugin->collect();
 
