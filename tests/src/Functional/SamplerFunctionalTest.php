@@ -312,12 +312,9 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $pluginManager = $this->container->get('plugin.manager.sampler');
 
     $pluginManager->clearCachedDefinitions();
-    $definitions = $pluginManager->getDefinitions();
+    $bundleDataPlugin = $pluginManager->getInstance($pluginId);
 
-    $bundleData = Bundle::create($this->container, [], $pluginId,
-      $definitions[$pluginId]);
-
-    $data = $bundleData->collect();
+    $data = $bundleDataPlugin->collect();
 
     return $data[$bundle]['fields'];
   }
