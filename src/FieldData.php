@@ -147,14 +147,22 @@ class FieldData {
 
     $targetBundles = array_keys($handlerSettings['target_bundles'] ?: []);
 
-    // Paragraph reference fields can have a "negate" option set, if this is
-    // case, the selected types are not allowed, but all other installed types.
-    if ($targetEntityTypeId === 'paragraph' && $handlerSettings['negate']) {
+    if ($targetEntityTypeId === 'paragraph') {
       $installedParagraphTypes = array_keys($this->bundleInfo->getBundleInfo($targetEntityTypeId));
-      $targetBundles = array_diff($installedParagraphTypes, $targetBundles);
+
+      // If "negate" option set, the selected types are not allowed, but all
+      // other existing types.
+      if ($handlerSettings['negate']) {
+        $targetBundles = array_diff($installedParagraphTypes, $targetBundles);
+      }
+      // If "negate" is not set, and no types are selected, all created types
+      // are allowed, otherwise the selected are allowed, and the target_bundles
+      // setting is actually correct.
+      elseif (empty($targetBundles)) {
+        $targetBundles = $installedParagraphTypes;
+      }
     }
-    print $entityTypeId . ' ' . $targetEntityTypeId . PHP_EOL;
-    print_r($targetBundles);
+
     // Map target bundles for anonymization.
     $mappedTargetBundles = array_map(
       function ($bundle) use ($targetEntityTypeId) {
