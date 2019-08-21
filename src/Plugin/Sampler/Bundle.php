@@ -204,12 +204,9 @@ class Bundle extends SamplerBase {
     $fieldDefinitions = $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle);
     $supportedFieldTypes = array_flip($this->samplerSettings->get('supported_field_types'));
 
-    $supportedFields = [];
-    foreach ($fieldDefinitions as $fieldName => $fieldConfig) {
-      if (isset($supportedFieldTypes[$fieldConfig->getType()])) {
-        $supportedFields[$fieldName] = $fieldConfig;
-      }
-    }
+    $supportedFields = array_filter($fieldDefinitions, function ($fieldConfig) use ($supportedFieldTypes) {
+      return isset($supportedFieldTypes[$fieldConfig->getType()]);
+    });
 
     return $supportedFields;
   }
