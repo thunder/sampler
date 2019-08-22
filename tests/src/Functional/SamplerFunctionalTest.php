@@ -29,6 +29,8 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     'file',
     'sampler_test',
     'media_test_type',
+    'entity_reference_revisions',
+    'paragraphs',
   ];
 
   /**
