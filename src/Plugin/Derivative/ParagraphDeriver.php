@@ -20,7 +20,7 @@ class ParagraphDeriver extends SamplerDeriverBase {
       return [];
     }
 
-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
+    foreach ($this->getSupportedEntityTypeDefinitions() as $entity_type) {
       // @todo we could check if they have have a paragraph field here.
       if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
         $this->derivatives[$entity_type->id()] = $base_plugin_definition;
