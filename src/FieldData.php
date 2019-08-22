@@ -149,15 +149,15 @@ class FieldData {
 
     if ($targetEntityTypeId === 'paragraph') {
       $installedParagraphTypes = array_keys($this->bundleInfo->getBundleInfo($targetEntityTypeId));
-      // If "negate" option set, the selected types are not allowed, but all
-      // other existing types.
+      // If the "negate" option is set, the selected types are not allowed, but
+      // all other existing types.
       if ($handlerSettings['negate']) {
         // array_values is used to reindex the resulting array.
         $targetBundles = array_values(array_diff($installedParagraphTypes, $targetBundles));
       }
-      // If "negate" is not set, and no types are selected, all created types
-      // are allowed, otherwise the selected are allowed, and the target_bundles
-      // setting is actually correct.
+      // If the "negate" is not set, and no types are selected, all created
+      // types are allowed, otherwise the selected are allowed, and the
+      // target_bundles setting is actually correct.
       elseif (empty($targetBundles)) {
         $targetBundles = $installedParagraphTypes;
       }
