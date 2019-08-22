@@ -227,13 +227,14 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     $this->assertArrayHasKey('field_1', $report['node']['bundle']['bundle_0']['fields']);
     $this->assertArrayHasKey('field_2', $report['node']['bundle']['bundle_0']['fields']);
     $this->assertArrayHasKey('field_3', $report['node']['bundle']['bundle_0']['fields']);
-    $this->assertArrayNotHasKey('field_4', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayHasKey('field_4', $report['node']['bundle']['bundle_0']['fields']);
+    $this->assertArrayNotHasKey('field_5', $report['node']['bundle']['bundle_0']['fields']);
 
     // bundle_2 has field_0 in common with bundle0.
     // field_4 is in bundle_2 only.
     $this->assertArrayHasKey('bundle_2', $report['node']['bundle']);
     $this->assertArrayHasKey('field_0', $report['node']['bundle']['bundle_2']['fields']);
-    $this->assertArrayHasKey('field_4', $report['node']['bundle']['bundle_2']['fields']);
+    $this->assertArrayHasKey('field_5', $report['node']['bundle']['bundle_2']['fields']);
 
     // Check, if roles are mapped.
     $this->assertArrayHasKey('role_0', $report['user']['role']);
