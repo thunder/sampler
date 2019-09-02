@@ -107,12 +107,21 @@ class FieldData {
   protected function defaultFieldData() {
     $fieldDefinition = $this->fieldDefinition;
 
-    return [
+    $data = [
       'type' => $fieldDefinition->getType(),
       'required' => (bool) $fieldDefinition->isRequired(),
       'translatable' => (bool) $fieldDefinition->isTranslatable(),
       'cardinality' => $fieldDefinition->getFieldStorageDefinition()->getCardinality(),
     ];
+
+    if ($this->isBaseField()) {
+      return $data;
+    }
+
+    // Add histogram of number of fields in bundle.
+    $data['histogram'] = $this->bundleFieldHistogramData();
+
+    return $data;
   }
 
   /**
@@ -129,7 +138,6 @@ class FieldData {
    */
   protected function entityReferenceFieldData() {
     $fieldDefinition = $this->fieldDefinition;
-    $entityTypeId = $this->entityTypeId;
 
     $targetEntityTypeId = $fieldDefinition->getSetting('target_type');
     $settingName = ($targetEntityTypeId == 'paragraph') ? 'target_bundles_drag_drop' : 'target_bundles';
@@ -147,13 +155,6 @@ class FieldData {
       'target_bundles' => $targetBundles,
     ];
 
-    if ($this->isBaseField()) {
-      return $data;
-    }
-
-    // Add histogram of number of entries in bundle.
-    $data['histogram'] = $this->histogramData($fieldDefinition, $entityTypeId);
-
     return $data;
   }
 
@@ -166,7 +167,7 @@ class FieldData {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function histogramData() {
+  protected function bundleFieldHistogramData() {
     $fieldDefinition = $this->fieldDefinition;
     $entityTypeId = $this->entityTypeId;
 
