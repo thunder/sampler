@@ -17,7 +17,7 @@ class BundleDeriver extends SamplerDeriverBase {
     // Reset the discovered definitions.
     $this->derivatives = [];
 
-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
+    foreach ($this->getSupportedEntityTypeDefinitions() as $entity_type) {
       // We need fieldable entities, assume SQL storage and they have a bundle
       // key.
       if ($entity_type->entityClassImplements(FieldableEntityInterface::class)
