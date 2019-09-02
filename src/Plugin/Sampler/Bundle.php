@@ -189,8 +189,9 @@ class Bundle extends SamplerBase {
   /**
    * Get all supported field definitions.
    *
-   * Filters all fields that have a not supported type. Supported types are
-   * defined in sampler settings.
+   * Filters all fields that have a not supported type if the field is
+   * referencing some entity, this entity also has to be supported.
+   * Supported types are defined in sampler settings.
    *
    * @param string $entityTypeId
    *   The entity type.
@@ -203,10 +204,20 @@ class Bundle extends SamplerBase {
   protected function getSupportedFieldDefinitions(string $entityTypeId, string $bundle) {
     $fieldDefinitions = $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle);
     $supportedFieldTypes = array_flip($this->samplerSettings->get('supported_field_types'));
+    $supportedEntityTypes = array_flip($this->samplerSettings->get('supported_entity_types'));
 
-    $supportedFields = array_filter($fieldDefinitions, function ($fieldConfig) use ($supportedFieldTypes) {
-      return isset($supportedFieldTypes[$fieldConfig->getType()]);
-    });
+    $supportedFields = array_filter($fieldDefinitions,
+      function ($fieldDefinition) use ($supportedFieldTypes, $supportedEntityTypes) {
+        $fieldType = $fieldDefinition->getType();
+        $isSupported = isset($supportedFieldTypes[$fieldType]);
+
+        if ($isSupported && in_array($fieldType, ['entity_reference', 'entity_reference_revisions'])) {
+          $fieldDefinition->getSetting('target_type');
+          $isSupported = isset($supportedEntityTypes[$fieldDefinition->getSetting('target_type')]);
+        }
+
+        return $isSupported;
+      });
 
     return $supportedFields;
   }
