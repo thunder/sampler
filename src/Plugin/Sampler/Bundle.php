@@ -7,10 +7,8 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Field\Entity\BaseFieldOverride;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\sampler\FieldData;
+use Drupal\sampler\FieldHelperTrait;
 use Drupal\sampler\Mapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,6 +24,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Bundle extends SamplerBase {
+
+  use FieldHelperTrait;
 
   /**
    * The entity type manager service.
@@ -152,13 +152,13 @@ class Bundle extends SamplerBase {
 
       $fields = $this->getSupportedFieldDefinitions($entityTypeId, $bundle);
 
-      /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig */
-      foreach ($fields as $fieldName => $fieldConfig) {
-        if ($this->isBaseField($fieldConfig)) {
+      /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
+      foreach ($fields as $fieldName => $fieldDefinition) {
+        if ($this->isBaseField($fieldDefinition)) {
           continue;
         }
 
-        $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
+        $fieldData = $this->fieldData->collect($fieldDefinition, $this->entityTypeId());
         $this->collectedData[$mapping]['fields'][$this->mapping->getFieldMapping($entityTypeId, $fieldName)] = $fieldData;
       }
     }
@@ -174,23 +174,11 @@ class Bundle extends SamplerBase {
   }
 
   /**
-   * Check, if current field is an entity base field.
-   *
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig
-   *   The field config.
-   *
-   * @return bool
-   *   Field is base field.
-   */
-  protected function isBaseField(FieldDefinitionInterface $fieldConfig) {
-    return ($fieldConfig instanceof BaseFieldDefinition || $fieldConfig instanceof BaseFieldOverride);
-  }
-
-  /**
    * Get all supported field definitions.
    *
-   * Filters all fields that have a not supported type. Supported types are
-   * defined in sampler settings.
+   * Filters all fields that have a not supported type if the field is
+   * referencing some entity, this entity also has to be supported.
+   * Supported types are defined in sampler settings.
    *
    * @param string $entityTypeId
    *   The entity type.
@@ -203,10 +191,22 @@ class Bundle extends SamplerBase {
   protected function getSupportedFieldDefinitions(string $entityTypeId, string $bundle) {
     $fieldDefinitions = $this->entityFieldManager->getFieldDefinitions($entityTypeId, $bundle);
     $supportedFieldTypes = array_flip($this->samplerSettings->get('supported_field_types'));
+    $supportedEntityTypes = array_flip($this->samplerSettings->get('supported_entity_types'));
 
-    $supportedFields = array_filter($fieldDefinitions, function ($fieldConfig) use ($supportedFieldTypes) {
-      return isset($supportedFieldTypes[$fieldConfig->getType()]);
-    });
+    $supportedFields = array_filter(
+      $fieldDefinitions,
+      function ($fieldDefinition) use ($supportedFieldTypes, $supportedEntityTypes) {
+        if (!isset($supportedFieldTypes[$fieldDefinition->getType()])) {
+          return FALSE;
+        }
+
+        if ($this->isReferenceField($fieldDefinition) && !isset($supportedEntityTypes[$fieldDefinition->getSetting('target_type')])) {
+          return FALSE;
+        }
+
+        return TRUE;
+      }
+    );
 
     return $supportedFields;
   }

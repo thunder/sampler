@@ -5,8 +5,6 @@ namespace Drupal\sampler;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
@@ -15,6 +13,8 @@ use Drupal\Core\Field\FieldDefinitionInterface;
  * @package Drupal\sampler
  */
 class FieldData {
+
+  use FieldHelperTrait;
 
   /**
    * The entity type manager service.
@@ -99,7 +99,7 @@ class FieldData {
     $fieldData = $this->defaultFieldData();
 
     // Reference field specific data.
-    if ($this->isReferenceField()) {
+    if ($this->isReferenceField($this->fieldDefinition)) {
       $fieldData = array_merge($fieldData, $this->entityReferenceFieldData());
     }
 
@@ -125,7 +125,7 @@ class FieldData {
       'cardinality' => $fieldDefinition->getFieldStorageDefinition()->getCardinality(),
     ];
 
-    if ($this->isBaseField()) {
+    if ($this->isBaseField($this->fieldDefinition)) {
       return $data;
     }
 
@@ -219,26 +219,6 @@ class FieldData {
     $results = $query->execute()->fetchCol();
 
     return array_count_values($results);
-  }
-
-  /**
-   * Check, if current filed is a reference field.
-   *
-   * @return bool
-   *   Field is reference field.
-   */
-  protected function isReferenceField() {
-    return in_array($this->fieldDefinition->getType(), ['entity_reference', 'entity_reference_revisions']);
-  }
-
-  /**
-   * Check, if current field is an entity base field.
-   *
-   * @return bool
-   *   Field is base field.
-   */
-  protected function isBaseField() {
-    return ($this->fieldDefinition instanceof BaseFieldDefinition  || $this->fieldDefinition instanceof BaseFieldOverride);
   }
 
 }
