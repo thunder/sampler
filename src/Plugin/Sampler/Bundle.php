@@ -7,10 +7,8 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Field\Entity\BaseFieldOverride;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\sampler\FieldData;
+use Drupal\sampler\FieldHelperTrait;
 use Drupal\sampler\Mapping;
 use Drupal\sampler\SamplerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,6 +24,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Bundle extends SamplerBase {
+
+  use FieldHelperTrait;
 
   /**
    * The entity type manager service.
@@ -174,19 +174,6 @@ class Bundle extends SamplerBase {
   }
 
   /**
-   * Check, if current field is an entity base field.
-   *
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig
-   *   The field config.
-   *
-   * @return bool
-   *   Field is base field.
-   */
-  protected function isBaseField(FieldDefinitionInterface $fieldConfig) {
-    return ($fieldConfig instanceof BaseFieldDefinition || $fieldConfig instanceof BaseFieldOverride);
-  }
-
-  /**
    * Get all supported field definitions.
    *
    * Filters all fields that have a not supported type if the field is
@@ -206,12 +193,13 @@ class Bundle extends SamplerBase {
     $supportedFieldTypes = array_flip($this->samplerSettings->get('supported_field_types'));
     $supportedEntityTypes = array_flip($this->samplerSettings->get('supported_entity_types'));
 
-    $supportedFields = array_filter($fieldDefinitions,
+    $supportedFields = array_filter(
+      $fieldDefinitions,
       function ($fieldDefinition) use ($supportedFieldTypes, $supportedEntityTypes) {
         $fieldType = $fieldDefinition->getType();
         $isSupported = isset($supportedFieldTypes[$fieldType]);
 
-        if ($isSupported && in_array($fieldType, ['entity_reference', 'entity_reference_revisions'])) {
+        if ($isSupported && $this->isReferenceField($fieldDefinition)) {
           $fieldDefinition->getSetting('target_type');
           $isSupported = isset($supportedEntityTypes[$fieldDefinition->getSetting('target_type')]);
         }
