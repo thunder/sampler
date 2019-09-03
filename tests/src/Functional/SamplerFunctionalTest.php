@@ -276,27 +276,48 @@ class SamplerFunctionalTest extends SamplerFunctionalTestBase {
     // Disable mapping for simplified tests.
     $this->container->get('sampler.mapping')->enableMapping(FALSE);
 
+    $stringField = 'field_one';
+    $paragraphsField = 'field_six';
+
     $pluginId = 'bundle:node';
 
     $fieldData = $this->getFieldData($pluginId, 'type_one');
-    $stringField = 'field_one';
 
     $this->assertArrayHasKey($stringField, $fieldData);
     $this->assertEquals('string', $fieldData[$stringField]['type']);
 
     $samplerSettings = $this->container->get('config.factory')->getEditable('sampler.settings');
-    $supportedEntityTypes = $samplerSettings->get('supported_field_types');
 
     // Remove string from supported field types.
-    $supportedEntityTypes = array_filter($supportedEntityTypes, function ($entityType) {
-      return $entityType !== 'string';
-    });
+    $supportedFieldTypes = array_filter(
+      $samplerSettings->get('supported_field_types'),
+      function ($entityType) {
+        return $entityType !== 'string';
+      }
+    );
 
-    $samplerSettings->set('supported_field_types', $supportedEntityTypes)->save();
+    $samplerSettings->set('supported_field_types', $supportedFieldTypes)->save();
 
     $fieldData = $this->getFieldData($pluginId, 'type_one');
-
     $this->assertArrayNotHasKey($stringField, $fieldData);
+
+    // Test, that reference fields that have an unsupported target_type are not
+    // exported.
+    // Make sure, that we actually have the paragraphs field in the test set.
+    $this->assertArrayHasKey($paragraphsField, $fieldData);
+
+    // Remove paragraph from supported entities.
+    $supportedEntityTypes = array_filter(
+      $samplerSettings->get('supported_entity_types'),
+      function ($entityType) {
+        return $entityType !== 'paragraph';
+      }
+    );
+
+    $samplerSettings->set('supported_entity_types', $supportedEntityTypes)->save();
+    $fieldData = $this->getFieldData($pluginId, 'type_one');
+    $this->assertArrayNotHasKey($paragraphsField, $fieldData);
+
   }
 
   /**
