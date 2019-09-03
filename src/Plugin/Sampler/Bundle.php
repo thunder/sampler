@@ -196,16 +196,17 @@ class Bundle extends SamplerBase {
     $supportedFields = array_filter(
       $fieldDefinitions,
       function ($fieldDefinition) use ($supportedFieldTypes, $supportedEntityTypes) {
-        $fieldType = $fieldDefinition->getType();
-        $isSupported = isset($supportedFieldTypes[$fieldType]);
-
-        if ($isSupported && $this->isReferenceField($fieldDefinition)) {
-          $fieldDefinition->getSetting('target_type');
-          $isSupported = isset($supportedEntityTypes[$fieldDefinition->getSetting('target_type')]);
+        if (!isset($supportedFieldTypes[$fieldDefinition->getType()])) {
+          return FALSE;
         }
 
-        return $isSupported;
-      });
+        if ($this->isReferenceField($fieldDefinition) && !isset($supportedEntityTypes[$fieldDefinition->getSetting('target_type')])) {
+          return FALSE;
+        }
+
+        return TRUE;
+      }
+    );
 
     return $supportedFields;
   }
