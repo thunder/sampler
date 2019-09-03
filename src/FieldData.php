@@ -99,7 +99,7 @@ class FieldData {
     $fieldData = $this->defaultFieldData();
 
     // Reference field specific data.
-    if ($this->isReferenceField($field_definition)) {
+    if ($this->isReferenceField($this->fieldDefinition)) {
       $fieldData = array_merge($fieldData, $this->entityReferenceFieldData());
     }
 
