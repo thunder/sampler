@@ -2,6 +2,8 @@
 
 namespace Drupal\sampler;
 
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**

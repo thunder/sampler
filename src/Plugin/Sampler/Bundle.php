@@ -152,13 +152,13 @@ class Bundle extends SamplerBase {
 
       $fields = $this->getSupportedFieldDefinitions($entityTypeId, $bundle);
 
-      /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldConfig */
-      foreach ($fields as $fieldName => $fieldConfig) {
-        if ($this->isBaseField($fieldConfig)) {
+      /** @var \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition */
+      foreach ($fields as $fieldName => $fieldDefinition) {
+        if ($this->isBaseField($fieldDefinition)) {
           continue;
         }
 
-        $fieldData = $this->fieldData->collect($fieldConfig, $this->entityTypeId());
+        $fieldData = $this->fieldData->collect($fieldDefinition, $this->entityTypeId());
         $this->collectedData[$mapping]['fields'][$this->mapping->getFieldMapping($entityTypeId, $fieldName)] = $fieldData;
       }
     }
