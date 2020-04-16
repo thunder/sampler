@@ -22,6 +22,11 @@ abstract class SamplerFunctionalTestBase extends BrowserTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Create a given amount of users with a certain role.
    *
    * @param string $rid
