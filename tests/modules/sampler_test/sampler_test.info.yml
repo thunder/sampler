@@ -1,7 +1,8 @@
 name: Sampler test module
 type: module
 description: 'Imports configuration for sampler tests.'
-core: 8.x
-
+core: '8.x'
+core_version_requirement: ^8 || ^9
+package: Testing
 dependencies:
   - drupal:node
